@@ -1,0 +1,16 @@
+Estamos utilizando API 26 (Oreo, android 8.0)
+
+Utilizamos Vector Drawables para no usar emojis pre definidos
+
+------------------------------------------------------
+
+Dependencias añadidas:
+
+// Conecta los ViewModels con Compose y retiene el estado ante giros de pantalla
+implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
+
+// Gestiona la navegación y el flujo entre pantallas en una sola Activity
+implementation("androidx.navigation:navigation-compose:2.10.1")
+
+// Libreria del calendario
+implementation("com.kizitonwose.calendar:compose:2.6.0")
