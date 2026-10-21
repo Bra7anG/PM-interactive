@@ -1,3 +1,23 @@
+/**
+ * OBJETIVO DEL SCRIPT:
+ * Gestionar la lógica de presentación y el estado visual del flujo de autenticación de usuarios.
+ *
+ * RESUMEN:
+ * Controla el inicio y cierre de sesión en la aplicación, sirviendo de puente entre la pantalla
+ * de Compose y el repositorio de autenticación mediante un estado reactivo observable.
+ *
+ * DETALLE:
+ * - Define 'AuthUiState' como sealed interface para modelar los estados finitos de la vista:
+ *   Inactivo, Cargando, Autenticado (con la instancia del Usuario) y Error (con mensaje explicativo).
+ * - Aplica el patrón backing property exponiendo un 'StateFlow' inmutable (uiState) mientras
+ *   mantiene un 'MutableStateFlow' privado (_uiState) para proteger las transiciones de estado.
+ * - Ejecuta la verificación de credenciales de forma asíncrona en segundo plano mediante 'viewModelScope.launch',
+ *   evitando congelar el hilo principal de la interfaz de usuario.
+ * - Implementa validación previa de campos obligatorios (correo y contraseña no vacíos) antes de
+ *   consultar a 'authRepository.login()'.
+ * - Ofrece la función 'cerrarSesion()' para invalidar la sesión actual en el repositorio y
+ *   restablecer la pantalla al estado Inactivo.
+ */
 package com.pminteractive.pmtours.viewmodel
 
 import androidx.lifecycle.ViewModel

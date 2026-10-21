@@ -1,21 +1,16 @@
 /**
  * OBJETIVO DEL SCRIPT:
- * Modelar la entidad principal de Servicios (transfers, city tours y excursiones) dentro de la app PM Tours[cite: 3, 4].
+ * Modelar la entidad de Servicio turístico turístico alineada a las columnas de la planilla y API Lince.
  *
  * RESUMEN:
- * Representa la orden operativa de cada servicio turístico asignado, integrando logística de ruta,
- * recursos asignados (chofer, vehículo específico y guía), notas de agencias y trazabilidad GPS[cite: 3, 4].
+ * Representa la orden de servicio con su reserva, pasajeros, itinerario, recursos asignados
+ * y los hitos de trazabilidad GPS requeridos por la app móvil.
  *
  * DETALLE:
- * - Vincula el 'numeroReserva' para trazabilidad operativa con el sistema central / ERP[cite: 3, 4].
- * - Registra la asignación puntual de recursos mediante 'driverId', 'vehiculoId' (auto/van específica)
- *   y 'guiaId' según los requerimientos del grupo de pasajeros[cite: 4].
- * - Gestiona el ciclo operativo a través de 'EstadoServicio' (asignado, confirmado, en ruta, finalizado, cancelado)[cite: 3, 4].
- * - Incluye 'notasAgencia' para exigencias del cliente (letreros en aeropuerto, uso de polera corporativa)
- *   y 'detalleItinerario' con la descripción de paradas del tour[cite: 4].
- * - Incorpora 'checkIn' y 'checkOut' (tipo RegistroHitoGps) para auditar la puntualidad (llegada 15 min antes)
- *   y registrar las coordenadas de inicio y término del recorrido[cite: 4].
- * - Almacena la 'tarifaAcordada' para alimentar el dashboard de ingresos acumulados de cada trabajador[cite: 4].
+ * - 'paxTexto': Almacena el formato de pasajeros de la planilla (ej: "2+0", "6+0").
+ * - 'driverId' y 'vehiculoId': Aplican para servicios tipo TRANSFER y EXCURSION.
+ * - 'guiaId': Aplica exclusivamente para servicios tipo GUIDED_SERVICE.
+ * - 'checkIn' y 'checkOut': Hitos de control móvil local para auditar puntualidad (15 min antes).
  */
 package com.pminteractive.pmtours.model.servicio
 
@@ -30,12 +25,13 @@ data class Servicio(
     val lugarPickup: String,
     val lugarDropOff: String,
     val cantidadPasajeros: Int,
-    val driverId: String?,
-    val vehiculoId: String?,        // ID del vehículo seleccionado de la lista del driver
-    val guiaId: String?,
+    val paxTexto: String = "2+0",   // Formato de planilla (adultos+niños)
+    val driverId: String?,          // Transportista asignado (solo TRANSFER y EXCURSION)
+    val vehiculoId: String?,        // Vehículo asignado (solo TRANSFER y EXCURSION)
+    val guiaId: String?,            // Guía asignado (solo GUIDED_SERVICE)
     val estado: EstadoServicio = EstadoServicio.ASIGNADO,
-    val tarifaAcordada: Double,     // Tarifa a pagar al recurso
-    val notasAgencia: String = "",  // Ej: "Polera de la empresa, letrero luminoso"
+    val tarifaAcordada: Double,
+    val notasAgencia: String = "",
     val detalleItinerario: String = "",
     val checkIn: RegistroHitoGps? = null,
     val checkOut: RegistroHitoGps? = null

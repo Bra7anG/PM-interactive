@@ -1,7 +1,19 @@
+/**
+ * OBJETIVO DEL SCRIPT:
+ * Definir el contrato de autenticación y su implementación con datos sintéticos para pruebas.
+ *
+ * RESUMEN:
+ * Valida credenciales de acceso para operadores, coordinadores y administradores,
+ * asociando usuarios de prueba consistentes con los códigos de la API de Lince.
+ *
+ * DETALLE:
+ * - Utiliza identificadores concordantes con la API: 'TRA-001' para Transportistas y 'GUI-012' para Guías.
+ * - Asigna sedes con sus códigos oficiales (SCL, PUX, PUQ).
+ * - Devuelve 'Result<Usuario>' para un control limpio de éxito o error en la interfaz de Compose.
+ */
 package com.pminteractive.pmtours.repository
 
 import com.pminteractive.pmtours.model.datosoperativos.DatosBancarios
-import com.pminteractive.pmtours.model.datosoperativos.RolUsuario
 import com.pminteractive.pmtours.model.datosoperativos.Sede
 import com.pminteractive.pmtours.model.datosoperativos.Vehiculo
 import com.pminteractive.pmtours.model.operadores.*
@@ -14,10 +26,9 @@ interface AuthRepository {
 
 class FakeAuthRepository : AuthRepository {
 
-    // Catálogo ficticio de usuarios para pruebas operativas en las 3 sedes
     private val usuariosPrueba: List<Usuario> = listOf(
         Driver(
-            id = "DRV-001",
+            id = "TRA-001",
             rut = "18.452.123-K",
             nombreCompleto = "Carlos Morales",
             correo = "cccc",
@@ -32,12 +43,12 @@ class FakeAuthRepository : AuthRepository {
                 rutTitular = "18.452.123-K"
             ),
             vehiculos = listOf(
-                Vehiculo("VEH-01", "Mercedes-Benz Sprinter 2022", "KLSX-45", 12, "Van"),
-                Vehiculo("VEH-02", "Toyota RAV4 2021", "PRTC-89", 4, "SUV")
+                Vehiculo("VEH-31", "Mercedes-Benz Sprinter 2022", "ZZ-1031", 16, "VAN"),
+                Vehiculo("VEH-14", "Toyota RAV4 2021", "PRTC-89", 4, "SEDAN")
             )
         ),
         Guia(
-            id = "GUI-101",
+            id = "GUI-012",
             rut = "19.876.543-2",
             nombreCompleto = "Valentina Lagos",
             correo = "valentina.lagos@pmtours.cl",
@@ -77,7 +88,6 @@ class FakeAuthRepository : AuthRepository {
     private var usuarioSesionActual: Usuario? = null
 
     override suspend fun login(correo: String, contrasena: String): Result<Usuario> {
-        // Validación simulada: permite entrar si el correo existe y la clave tiene al menos 4 caracteres
         val usuario = usuariosPrueba.find { it.correo.equals(correo.trim(), ignoreCase = true) }
 
         return if (usuario != null && contrasena.length >= 4) {

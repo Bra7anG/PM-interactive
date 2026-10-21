@@ -29,6 +29,9 @@ import com.pminteractive.pmtours.model.operadores.Usuario
 import com.pminteractive.pmtours.ui.theme.*
 import com.pminteractive.pmtours.viewmodel.AuthUiState
 import com.pminteractive.pmtours.viewmodel.AuthViewModel
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.pminteractive.pmtours.R
 
 @Composable
 fun LoginScreen(
@@ -68,28 +71,20 @@ fun LoginScreen(
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 1. Isotipo circular corporativo
-            Box(
+            // 1. Logo superior corporativo
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo Lince PM Tours",
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit,
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(105.dp) // Tamaño protagónico y legible
                     .clip(CircleShape)
-                    .background(LinceSurface)
-                    .border(2.dp, LinceSurfaceBorder, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "L",
-                    color = LinceCyan,
-                    fontSize = 38.sp,
-                    fontWeight = FontWeight.Black
-                )
-            }
-
+            )
             Spacer(modifier = Modifier.height(16.dp))
 
             // 2. Títulos corporativos
             Text(
-                text = "Lince",
+                text = "PM TOURS",
                 color = LinceTextPrimary,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold

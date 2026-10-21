@@ -1,3 +1,17 @@
+/**
+ * OBJETIVO DEL SCRIPT:
+ * Gestionar la persistencia y consulta reactiva de servicios turísticos asignados a operadores.
+ *
+ * RESUMEN:
+ * Expone un flujo de datos en tiempo real mediante StateFlow, implementando las reglas de asignación
+ * de la planilla oficial y registrando hitos de Check-in y Check-out en memoria.
+ *
+ * DETALLE:
+ * - Cumple con la regla de asignación de la API: TRANSFER y EXCURSION solo asignan transportista;
+ *   GUIDED_SERVICE asigna únicamente guía turístico.
+ * - Utiliza códigos de servicio y reserva basados en el esquema de la empresa (SRV-000245, etc.).
+ * - Gestiona estados inmutables mediante '.copy()' y emisión a través de 'MutableStateFlow'.
+ */
 package com.pminteractive.pmtours.repository
 
 import com.pminteractive.pmtours.model.servicio.EstadoServicio
@@ -6,7 +20,6 @@ import com.pminteractive.pmtours.model.servicio.Servicio
 import com.pminteractive.pmtours.model.servicio.TipoServicio
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 
 interface ServicioRepository {
@@ -20,65 +33,112 @@ interface ServicioRepository {
 
 class FakeServicioRepository : ServicioRepository {
 
-    // Lista observable con StateFlow para que Compose se actualice automáticamente ante cambios
     private val _servicios = MutableStateFlow(
         listOf(
+            // 1. Servicio completado a principios de mes (suma a liquidación)
             Servicio(
-                id = "SRV-001",
-                numeroReserva = "RES-2026-901",
-                titulo = "Transfer In: Aeropuerto SCL -> Hotel Cumbres Lastarria",
+                id = "SRV-000240",
+                numeroReserva = "WHFT223100",
+                titulo = "Transfer Out: Hotel Lastarria -> Aeropuerto SCL",
+                tipo = TipoServicio.TRANSFER,
+                fecha = "2026-10-05",
+                horaInicio = "07:00",
+                horaFinEstimada = "08:30",
+                lugarPickup = "Hotel Barrio Lastarria, Santiago",
+                lugarDropOff = "Aeropuerto Internacional Arturo Merino Benítez",
+                cantidadPasajeros = 2,
+                paxTexto = "2+0",
+                driverId = "TRA-001",
+                vehiculoId = "VEH-14",
+                guiaId = null,
+                estado = EstadoServicio.FINALIZADO,
+                tarifaAcordada = 45000.0,
+                notasAgencia = "Pasajeros con vuelo internacional temprano.",
+                detalleItinerario = "Traslado directo por Costanera Norte."
+            ),
+            // 2. Excursión completada la semana pasada (suma a liquidación)
+            Servicio(
+                id = "SRV-000242",
+                numeroReserva = "WHFT223150",
+                titulo = "Excursión Viña Concha y Toro · Pirque",
+                tipo = TipoServicio.EXCURSION,
+                fecha = "2026-10-12",
+                horaInicio = "10:00",
+                horaFinEstimada = "15:30",
+                lugarPickup = "Hotel Cumbres Lastarria, Santiago",
+                lugarDropOff = "Hotel Cumbres Lastarria, Santiago",
+                cantidadPasajeros = 4,
+                paxTexto = "4+0",
+                driverId = "TRA-001",
+                vehiculoId = "VEH-31",
+                guiaId = null,
+                estado = EstadoServicio.FINALIZADO,
+                tarifaAcordada = 80000.0,
+                notasAgencia = "Degustación premium reservada para las 11:30.",
+                detalleItinerario = "Ruta directa Santiago a Pirque y retorno."
+            ),
+            // 3. Servicio cancelado por no-show de cliente (tarifa protegida, suma a liquidación)
+            Servicio(
+                id = "SRV-000244",
+                numeroReserva = "WHFT223210",
+                titulo = "Transfer In: Aeropuerto SCL -> Hotel Sheraton",
+                tipo = TipoServicio.TRANSFER,
+                fecha = "2026-10-15",
+                horaInicio = "13:00",
+                horaFinEstimada = "14:30",
+                lugarPickup = "Aeropuerto Internacional Arturo Merino Benítez",
+                lugarDropOff = "Hotel Sheraton, Providencia",
+                cantidadPasajeros = 1,
+                paxTexto = "1+0",
+                driverId = "TRA-001",
+                vehiculoId = "VEH-14",
+                guiaId = null,
+                estado = EstadoServicio.CANCELADO,
+                tarifaAcordada = 45000.0,
+                notasAgencia = "Cliente perdió vuelo de conexión. Tarifa resguardada para transportista.",
+                detalleItinerario = "Espera en aeropuerto y cancelación reportada por operaciones."
+            ),
+            // 4. Servicio asignado para hoy o próximos días (NO suma aún a liquidación)
+            Servicio(
+                id = "SRV-000245",
+                numeroReserva = "WHFT223423",
+                titulo = "Transfer In: Aeropuerto SCL -> Hotel Barrio Lastarria",
                 tipo = TipoServicio.TRANSFER,
                 fecha = "2026-10-20",
                 horaInicio = "09:00",
                 horaFinEstimada = "10:30",
                 lugarPickup = "Aeropuerto Internacional Arturo Merino Benítez (Puerta 4)",
-                lugarDropOff = "Hotel Cumbres Lastarria, Santiago",
+                lugarDropOff = "Hotel Barrio Lastarria, Santiago",
                 cantidadPasajeros = 2,
-                driverId = "DRV-001", // Carlos Morales
-                vehiculoId = "VEH-02", // Toyota RAV4
+                paxTexto = "2+0",
+                driverId = "TRA-001",
+                vehiculoId = "VEH-14",
                 guiaId = null,
                 estado = EstadoServicio.ASIGNADO,
                 tarifaAcordada = 45000.0,
-                notasAgencia = "Pasajeros australianos. Llevar letrero impreso con nombre y vestir polera institucional.",
-                detalleItinerario = "Recepción en puerta internacional, asistencia con equipaje y traslado directo por Costanera Norte."
+                notasAgencia = "Pasajeros australianos (Smith John x2). Llevar letrero en mano.",
+                detalleItinerario = "Recepción en puerta internacional y traslado vía Costanera Norte."
             ),
+            // 5. Excursión confirmada a futuro (NO suma aún a liquidación)
             Servicio(
-                id = "SRV-002",
-                numeroReserva = "RES-2026-905",
-                titulo = "City Tour Histórico Santiago & Cerro San Cristóbal",
-                tipo = TipoServicio.CITY_TOUR_HALF_DAY,
-                fecha = "2026-10-20",
-                horaInicio = "14:30",
-                horaFinEstimada = "18:30",
-                lugarPickup = "Hotel Cumbres Lastarria",
-                lugarDropOff = "Patio Bellavista, Santiago",
-                cantidadPasajeros = 6,
-                driverId = "DRV-001",
-                vehiculoId = "VEH-01", // Mercedes-Benz Sprinter
-                guiaId = "GUI-101", // Valentina Lagos
-                estado = EstadoServicio.CONFIRMADO,
-                tarifaAcordada = 75000.0,
-                notasAgencia = "Coordinar parada de 30 min en pueblito Los Dominicos. Requiere guía en inglés fluido.",
-                detalleItinerario = "Recorrido por Centro Histórico, Plaza de Armas, Palacio de La Moneda y ascenso al Cerro San Cristóbal."
-            ),
-            Servicio(
-                id = "SRV-003",
-                numeroReserva = "RES-2026-912",
-                titulo = "Excursión Full Day: Volcán Osorno y Saltos del Petrohué",
-                tipo = TipoServicio.CITY_TOUR_FULL_DAY,
-                fecha = "2026-10-22",
-                horaInicio = "08:30",
+                id = "SRV-000247",
+                numeroReserva = "WHFT223488",
+                titulo = "Excursión Full Day: Cajón del Maipo & Embalse El Yeso",
+                tipo = TipoServicio.EXCURSION,
+                fecha = "2026-10-25",
+                horaInicio = "08:00",
                 horaFinEstimada = "17:00",
-                lugarPickup = "Hotel Cabaña del Lago, Puerto Varas",
-                lugarDropOff = "Hotel Cabaña del Lago, Puerto Varas",
+                lugarPickup = "Hotel Barrio Lastarria, Santiago",
+                lugarDropOff = "Hotel Barrio Lastarria, Santiago",
                 cantidadPasajeros = 8,
-                driverId = null, // Pendiente de asignación por operaciones
-                vehiculoId = null,
-                guiaId = "GUI-101",
-                estado = EstadoServicio.ASIGNADO,
+                paxTexto = "6+2",
+                driverId = "TRA-001",
+                vehiculoId = "VEH-31",
+                guiaId = null,
+                estado = EstadoServicio.CONFIRMADO,
                 tarifaAcordada = 120000.0,
-                notasAgencia = "Viático de almuerzo incluido en voucher. Entrada a parque nacional previamente pagada.",
-                detalleItinerario = "Bordeando Lago Llanquihue hacia Ensenada, visita a Saltos del Petrohué y ascenso a cafetería Volcán Osorno."
+                notasAgencia = "Revisar cadenas y permisos de acceso municipal.",
+                detalleItinerario = "Salida por Camino al Volcán hacia San José de Maipo."
             )
         )
     )

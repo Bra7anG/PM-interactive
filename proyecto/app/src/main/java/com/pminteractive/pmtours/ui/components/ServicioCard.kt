@@ -1,3 +1,16 @@
+/**
+ * OBJETIVO DEL SCRIPT:
+ * Componente visual reutilizable para renderizar una tarjeta de servicio turístico en listas.
+ *
+ * RESUMEN:
+ * Muestra la información esencial del traslado o excursión: horario, tipo de servicio,
+ * etiqueta de estado con color diferenciado y trayecto o descripción con pasajeros.
+ *
+ * DETALLE:
+ * - Compatible con los tipos oficiales: TRANSFER, GUIDED_SERVICE y EXCURSION.
+ * - Emplea la paleta de colores oficial de Lince (LinceSurface, LinceCyan, etc.).
+ * - Permite navegación interactiva mediante el evento 'onCardClick'.
+ */
 package com.pminteractive.pmtours.ui.components
 
 import androidx.compose.foundation.clickable
@@ -22,7 +35,6 @@ fun ServicioCard(
     onCardClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Configuración visual del Badge de Estado según la maqueta
     val (fondoBadge, textoBadgeColor, textoBadge) = when (servicio.estado) {
         EstadoServicio.ASIGNADO -> Triple(Color(0xFFFFE5D0), Color(0xFFD97706), "Pendiente")
         EstadoServicio.CONFIRMADO -> Triple(Color(0xFFD1F2D9), Color(0xFF15803D), "Confirmado")
@@ -32,18 +44,16 @@ fun ServicioCard(
         EstadoServicio.CANCELADO -> Triple(Color(0xFFFFE4E6), Color(0xFFE11D48), "Cancelado")
     }
 
-    // Etiqueta del tipo de servicio (TRANSFER, EXCURSIÓN, etc.)
     val etiquetaTipo = when (servicio.tipo) {
         TipoServicio.TRANSFER -> "TRANSFER"
-        TipoServicio.CITY_TOUR_HALF_DAY -> "CITY TOUR"
-        TipoServicio.CITY_TOUR_FULL_DAY -> "EXCURSIÓN"
+        TipoServicio.GUIDED_SERVICE -> "SERVICIO GUIADO"
+        TipoServicio.EXCURSION -> "EXCURSIÓN"
     }
 
-    // Texto de la ruta o descripción
-    val textoRuta = if (servicio.lugarDropOff.isNotBlank()) {
+    val textoRuta = if (servicio.lugarDropOff.isNotBlank() && servicio.tipo == TipoServicio.TRANSFER) {
         "${servicio.lugarPickup.substringBefore(",")} → ${servicio.lugarDropOff.substringBefore(",")}"
     } else {
-        "${servicio.titulo} · Grupo ${servicio.cantidadPasajeros} pax"
+        "${servicio.titulo} · ${servicio.paxTexto} pax"
     }
 
     Surface(
@@ -60,7 +70,6 @@ fun ServicioCard(
             modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Fila superior: Hora + Tipo a la izquierda, Badge a la derecha
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -76,14 +85,13 @@ fun ServicioCard(
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = etiquetaTipo,
-                        color = LinceTextSecondary,
+                        color = LinceCyan,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.5.sp
                     )
                 }
 
-                // Badge redondeado idéntico a la maqueta
                 Surface(
                     color = fondoBadge,
                     shape = RoundedCornerShape(12.dp)
@@ -98,7 +106,6 @@ fun ServicioCard(
                 }
             }
 
-            // Fila inferior: Descripción o Trayecto
             Text(
                 text = textoRuta,
                 color = LinceTextPrimary,
