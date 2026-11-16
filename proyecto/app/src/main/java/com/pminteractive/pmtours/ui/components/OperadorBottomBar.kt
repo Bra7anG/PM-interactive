@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,6 +31,7 @@ fun OperadorBottomBar(
         // Tab 1: Servicios (ic_home)
         NavigationBarItem(
             selected = rutaActual == Screen.Servicios.route,
+            modifier = Modifier.testTag("tab_servicios"),
             onClick = {
                 if (rutaActual != Screen.Servicios.route) {
                     onNavegar(Screen.Servicios.route)
@@ -55,6 +57,7 @@ fun OperadorBottomBar(
         // Tab 2: Calendario (ic_calendario)
         NavigationBarItem(
             selected = rutaActual == Screen.Calendario.route,
+            modifier = Modifier.testTag("tab_calendario"),
             onClick = {
                 if (rutaActual != Screen.Calendario.route) {
                     onNavegar(Screen.Calendario.route)
@@ -80,6 +83,7 @@ fun OperadorBottomBar(
         // Tab 3: Perfil (ic_person)
         NavigationBarItem(
             selected = rutaActual == Screen.Perfil.route,
+            modifier = Modifier.testTag("tab_perfil"),
             onClick = {
                 if (rutaActual != Screen.Perfil.route) {
                     onNavegar(Screen.Perfil.route)

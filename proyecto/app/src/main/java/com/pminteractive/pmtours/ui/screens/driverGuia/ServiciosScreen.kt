@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -186,7 +187,9 @@ fun ServiciosScreen(
                     focusedBorderColor = LinceCyan,
                     unfocusedBorderColor = LinceSurfaceBorder
                 ),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("servicios_busqueda")
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -203,6 +206,7 @@ fun ServiciosScreen(
                     FilterChip(
                         selected = seleccionado,
                         onClick = { filtroSeleccionado = filtro },
+                        modifier = Modifier.testTag("chip_${filtro.name}"),
                         label = {
                             Text(
                                 text = filtro.etiqueta,
@@ -266,7 +270,9 @@ fun ServiciosScreen(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
                 contentPadding = PaddingValues(bottom = 16.dp),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("servicios_lista")
             ) {
                 if (serviciosFiltrados.isEmpty()) {
                     item {
@@ -279,6 +285,7 @@ fun ServiciosScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 20.dp)
+                                .testTag("servicios_vacio")
                         ) {
                             Row(
                                 modifier = Modifier.padding(18.dp),

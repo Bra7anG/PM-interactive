@@ -23,6 +23,7 @@ import com.pminteractive.pmtours.model.servicio.RegistroHitoGps
 import com.pminteractive.pmtours.model.servicio.Servicio
 import com.pminteractive.pmtours.repository.FakeServicioRepository
 import com.pminteractive.pmtours.repository.ServicioRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -48,8 +49,11 @@ data class ResumenLiquidacion(
 
 class ServicioViewModel(
     private val repository: ServicioRepository = FakeServicioRepository(),
-    trabajadorIdInicial: String = "TRA-001"
+    trabajadorIdInicial: String = "TRA-001",
+    scope: CoroutineScope? = null
 ) : ViewModel() {
+
+    private val coroutineScope: CoroutineScope = scope ?: viewModelScope
 
     private val _servicios = MutableStateFlow<List<Servicio>>(emptyList())
     val servicios: StateFlow<List<Servicio>> = _servicios.asStateFlow()
@@ -67,7 +71,7 @@ class ServicioViewModel(
      */
     fun cargarServiciosDelUsuario(trabajadorId: String) {
         jobObservador?.cancel()
-        jobObservador = viewModelScope.launch {
+        jobObservador = coroutineScope.launch {
             repository.obtenerServiciosPorTrabajador(trabajadorId).collect { listaBruta ->
                 val mesActual = YearMonth.now()
 
@@ -131,7 +135,7 @@ class ServicioViewModel(
             nombreMes = nombreMesFormateado
         )
     }.stateIn(
-        scope = viewModelScope,
+        scope = coroutineScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = ResumenLiquidacion()
     )
@@ -141,7 +145,7 @@ class ServicioViewModel(
     }
 
     fun responderAsignacion(servicioId: String, aceptar: Boolean) {
-        viewModelScope.launch {
+        coroutineScope.launch {
             repository.responderAsignacion(servicioId, aceptar)
         }
     }
@@ -169,7 +173,7 @@ class ServicioViewModel(
             aTiempo = aTiempo
         )
 
-        viewModelScope.launch {
+        coroutineScope.launch {
             repository.registrarCheckIn(servicioId, hito)
         }
     }
@@ -185,7 +189,7 @@ class ServicioViewModel(
             aTiempo = true
         )
 
-        viewModelScope.launch {
+        coroutineScope.launch {
             repository.registrarCheckOut(servicioId, hito)
         }
     }

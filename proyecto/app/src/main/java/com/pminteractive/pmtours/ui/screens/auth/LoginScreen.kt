@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -107,6 +108,7 @@ fun LoginScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 20.dp)
+                        .testTag("login_error")
                 ) {
                     Row(
                         modifier = Modifier.padding(14.dp),
@@ -165,7 +167,9 @@ fun LoginScreen(
                         unfocusedBorderColor = LinceSurfaceBorder,
                         errorBorderColor = LinceError
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("login_correo")
                 )
                 if (correoInvalido) {
                     Text(
@@ -219,7 +223,9 @@ fun LoginScreen(
                         unfocusedBorderColor = LinceSurfaceBorder,
                         errorBorderColor = LinceError
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("login_clave")
                 )
                 if (contrasenaInvalida) {
                     Text(
@@ -235,7 +241,10 @@ fun LoginScreen(
 
             // 6. Botón de Acción Principal (Cian)
             if (uiState is AuthUiState.Cargando) {
-                CircularProgressIndicator(color = LinceCyan)
+                CircularProgressIndicator(
+                    color = LinceCyan,
+                    modifier = Modifier.testTag("login_cargando")
+                )
             } else {
                 Button(
                     onClick = {
@@ -253,6 +262,7 @@ fun LoginScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp)
+                        .testTag("login_btn")
                 ) {
                     Text(
                         text = "Ingresar",
