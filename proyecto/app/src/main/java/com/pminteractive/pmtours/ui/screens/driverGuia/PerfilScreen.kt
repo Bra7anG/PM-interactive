@@ -24,12 +24,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -53,6 +53,10 @@ fun PerfilScreen(
     onCambiarTab: (String) -> Unit = {},
     servicioViewModel: ServicioViewModel = viewModel()
 ) {
+    LaunchedEffect(usuario?.id) {
+        usuario?.id?.let { servicioViewModel.cargarServiciosDelUsuario(it) }
+    }
+
     val resumenLiquidacion by servicioViewModel.resumenMesActual.collectAsState()
 
     val formatoMoneda = NumberFormat.getCurrencyInstance(Locale("es", "CL")).apply {
@@ -144,7 +148,7 @@ fun PerfilScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Liquidación Acumulada",
+                            text = "Sueldo del mes",
                             color = LinceCyan,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
@@ -157,7 +161,7 @@ fun PerfilScreen(
                             )
                         ) {
                             Text(
-                                text = resumenLiquidacion.nombreMes.ifEmpty { "Octubre 2026" },
+                                text = resumenLiquidacion.nombreMes.ifEmpty { "Mes actual" },
                                 color = LinceTextPrimary,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
@@ -198,7 +202,7 @@ fun PerfilScreen(
                                     text = "${resumenLiquidacion.serviciosCompletados}",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF10B981) // Verde éxito
+                                    color = LinceSuccessAccent
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
@@ -231,7 +235,7 @@ fun PerfilScreen(
                                     text = "${resumenLiquidacion.serviciosCanceladosConPago}",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFFF59E0B) // Ámbar informativo
+                                    color = LinceWarning
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
@@ -266,7 +270,7 @@ fun PerfilScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Montos acumulados con Check-Out completado y servicios con tarifa resguardada por la agencia.",
+                            text = "Sueldo del mes: incluye servicios con Check-Out completado y tarifas resguardadas por la agencia.",
                             color = LinceTextSecondary,
                             fontSize = 11.sp,
                             lineHeight = 15.sp

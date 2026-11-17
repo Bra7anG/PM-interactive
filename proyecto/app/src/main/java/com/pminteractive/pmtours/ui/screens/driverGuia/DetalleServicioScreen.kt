@@ -31,7 +31,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -52,9 +51,14 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun DetalleServicioScreen(
     servicioId: String,
+    usuarioId: String,
     onVolver: () -> Unit,
     viewModel: ServicioViewModel = viewModel()
 ) {
+    LaunchedEffect(usuarioId) {
+        viewModel.cargarServiciosDelUsuario(usuarioId)
+    }
+
     val context = LocalContext.current
     val servicios by viewModel.servicios.collectAsState()
     val servicio = servicios.find { it.id == servicioId }
@@ -144,7 +148,7 @@ fun DetalleServicioScreen(
 
             // 2. Curva gráfica de ruta (Canvas nativo)
             Surface(
-                color = Color(0xFFE2E8F0),
+                color = LinceRouteSurface,
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -170,15 +174,15 @@ fun DetalleServicioScreen(
 
                     drawPath(
                         path = path,
-                        color = Color(0xFF1E3A8A),
+                        color = LinceRouteStart,
                         style = Stroke(
                             width = 6f,
                             pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 10f), 0f)
                         )
                     )
 
-                    drawCircle(color = Color(0xFF1E3A8A), radius = 10f, center = startPoint)
-                    drawCircle(color = Color(0xFFEA580C), radius = 10f, center = endPoint)
+                    drawCircle(color = LinceRouteStart, radius = 10f, center = startPoint)
+                    drawCircle(color = LinceRouteEnd, radius = 10f, center = endPoint)
                 }
             }
 
@@ -293,13 +297,13 @@ fun DetalleServicioScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_location_pin),
                             contentDescription = null,
-                            tint = Color(0xFFEA580C),
+                            tint = LinceRouteEnd,
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Lugar de Destino",
-                            color = Color(0xFFEA580C),
+                            color = LinceRouteEnd,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -325,7 +329,7 @@ fun DetalleServicioScreen(
                         Icon(
                             painter = painterResource(id = R.drawable.ic_map),
                             contentDescription = null,
-                            tint = Color(0xFFEA580C),
+                            tint = LinceRouteEnd,
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
@@ -371,7 +375,7 @@ fun DetalleServicioScreen(
             if (servicio.checkIn != null) {
                 Spacer(modifier = Modifier.height(14.dp))
                 Surface(
-                    color = if (servicio.checkIn.aTiempo) Color(0x2610B981) else LinceErrorContainer,
+                    color = if (servicio.checkIn.aTiempo) LinceSuccessContainer else LinceErrorContainer,
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -383,7 +387,7 @@ fun DetalleServicioScreen(
                             text = if (servicio.checkIn.aTiempo) "✓" else "!",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (servicio.checkIn.aTiempo) Color(0xFF10B981) else LinceError
+                            color = if (servicio.checkIn.aTiempo) LinceSuccessAccent else LinceError
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
@@ -392,7 +396,7 @@ fun DetalleServicioScreen(
                             } else {
                                 "Check-in registrado fuera del plazo de anticipación"
                             },
-                            color = if (servicio.checkIn.aTiempo) Color(0xFF10B981) else LinceError,
+                            color = if (servicio.checkIn.aTiempo) LinceSuccessAccent else LinceError,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -486,7 +490,7 @@ fun DetalleServicioScreen(
                     Button(
                         onClick = { viewModel.realizarCheckOut(servicio.id) },
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                        colors = ButtonDefaults.buttonColors(containerColor = LinceSuccessAccent),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp)
@@ -497,7 +501,7 @@ fun DetalleServicioScreen(
 
                 EstadoServicio.FINALIZADO -> {
                     Surface(
-                        color = Color(0xFF1E293B),
+                        color = LinceFinishedSurface,
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {

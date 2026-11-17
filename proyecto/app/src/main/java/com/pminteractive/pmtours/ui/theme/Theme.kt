@@ -18,9 +18,9 @@ import androidx.core.view.WindowCompat
 
 // Esquema de colores basado en la identidad de Proyecto Lince
 private val LinceColorScheme = darkColorScheme(
-    primary = LinceCyan,
+    primary = LincePrimary,
     onPrimary = Color.White,
-    secondary = LinceCyanHover,
+    secondary = LincePrimaryPressed,
     onSecondary = Color.White,
     background = LinceBackground,
     onBackground = LinceTextPrimary,
@@ -30,7 +30,9 @@ private val LinceColorScheme = darkColorScheme(
     onSurfaceVariant = LinceTextSecondary,
     outline = LinceSurfaceBorder,
     error = LinceError,
-    onError = Color.White
+    onError = Color.White,
+    errorContainer = LinceErrorContainer,
+    onErrorContainer = LinceError
 )
 
 @Composable

@@ -21,7 +21,7 @@ import androidx.lifecycle.viewModelScope
 import com.pminteractive.pmtours.model.servicio.EstadoServicio
 import com.pminteractive.pmtours.model.servicio.RegistroHitoGps
 import com.pminteractive.pmtours.model.servicio.Servicio
-import com.pminteractive.pmtours.repository.FakeServicioRepository
+import com.pminteractive.pmtours.repository.AppContainer
 import com.pminteractive.pmtours.repository.ServicioRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,18 +47,14 @@ data class ResumenLiquidacion(
 )
 
 class ServicioViewModel(
-    private val repository: ServicioRepository = FakeServicioRepository(),
-    trabajadorIdInicial: String = "TRA-001"
+    private val repository: ServicioRepository = AppContainer.servicioRepository
 ) : ViewModel() {
 
     private val _servicios = MutableStateFlow<List<Servicio>>(emptyList())
     val servicios: StateFlow<List<Servicio>> = _servicios.asStateFlow()
 
     private var jobObservador: Job? = null
-
-    init {
-        cargarServiciosDelUsuario(trabajadorIdInicial)
-    }
+    private var trabajadorActual: String? = null
 
     /**
      * Conecta la vista con el repositorio filtrando únicamente los viajes pertinentes a la agenda:
@@ -66,7 +62,16 @@ class ServicioViewModel(
      * - Servicios FINALIZADOS: Solo visibles si fueron ejecutados en el mes actual.
      */
     fun cargarServiciosDelUsuario(trabajadorId: String) {
+        if (trabajadorId.isBlank()) {
+            limpiar()
+            return
+        }
+        if (trabajadorId == trabajadorActual) return
+
+        trabajadorActual = trabajadorId
         jobObservador?.cancel()
+        _servicios.value = emptyList()
+
         jobObservador = viewModelScope.launch {
             repository.obtenerServiciosPorTrabajador(trabajadorId).collect { listaBruta ->
                 val mesActual = YearMonth.now()
@@ -89,6 +94,13 @@ class ServicioViewModel(
                 _servicios.value = listaDepurada
             }
         }
+    }
+
+    fun limpiar() {
+        jobObservador?.cancel()
+        jobObservador = null
+        trabajadorActual = null
+        _servicios.value = emptyList()
     }
 
     // Cálculo reactivo mensual para la pantalla de Perfil

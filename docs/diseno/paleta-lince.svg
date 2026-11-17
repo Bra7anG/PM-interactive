@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="900" viewBox="0 0 1000 900">
+  <rect width="1000" height="900" fill="#0A1929"/>
+  <text x="40" y="58" fill="#FFFFFF" font-family="Segoe UI, Arial, sans-serif" font-size="30" font-weight="700">Paleta Lince</text>
+  <text x="40" y="86" fill="#94A3B8" font-family="Segoe UI, Arial, sans-serif" font-size="15">PM Tours - fuente unica de color para la aplicacion</text>
+  <line x1="40" y1="115" x2="960" y2="115" stroke="#1E4976" stroke-width="1"/>
+
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <g transform="translate(40,150)">
+      <rect width="218" height="46" rx="8" fill="#0A1929" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceBackground</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#0A1929</text>
+    </g>
+    <g transform="translate(274,150)">
+      <rect width="218" height="46" rx="8" fill="#132F4C" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceSurface</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#132F4C</text>
+    </g>
+    <g transform="translate(508,150)">
+      <rect width="218" height="46" rx="8" fill="#1E4976" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceSurfaceBorder</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#1E4976</text>
+    </g>
+    <g transform="translate(742,150)">
+      <rect width="218" height="46" rx="8" fill="#00A3E0" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LincePrimary</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#00A3E0</text>
+    </g>
+
+    <g transform="translate(40,250)">
+      <rect width="218" height="46" rx="8" fill="#008CC2" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LincePrimaryPressed</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#008CC2</text>
+    </g>
+    <g transform="translate(274,250)">
+      <rect width="218" height="46" rx="8" fill="#FFFFFF" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceTextPrimary</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#FFFFFF</text>
+    </g>
+    <g transform="translate(508,250)">
+      <rect width="218" height="46" rx="8" fill="#94A3B8" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceTextSecondary</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#94A3B8</text>
+    </g>
+    <g transform="translate(742,250)">
+      <rect width="218" height="46" rx="8" fill="#B45309" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LincePending</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#B45309</text>
+    </g>
+
+    <g transform="translate(40,350)">
+      <rect width="218" height="46" rx="8" fill="#FFE5D0" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LincePendingSoft</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#FFE5D0</text>
+    </g>
+    <g transform="translate(274,350)">
+      <rect width="218" height="46" rx="8" fill="#15803D" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceSuccess</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#15803D</text>
+    </g>
+    <g transform="translate(508,350)">
+      <rect width="218" height="46" rx="8" fill="#D1F2D9" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceSuccessSoft</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#D1F2D9</text>
+    </g>
+    <g transform="translate(742,350)">
+      <rect width="218" height="46" rx="8" fill="#0369A1" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceService</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#0369A1</text>
+    </g>
+
+    <g transform="translate(40,450)">
+      <rect width="218" height="46" rx="8" fill="#E0F2FE" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceServiceSoft</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#E0F2FE</text>
+    </g>
+    <g transform="translate(274,450)">
+      <rect width="218" height="46" rx="8" fill="#94A3B8" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceFinished</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#94A3B8</text>
+    </g>
+    <g transform="translate(508,450)">
+      <rect width="218" height="46" rx="8" fill="#334155" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceFinishedSoft</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#334155</text>
+    </g>
+    <g transform="translate(742,450)">
+      <rect width="218" height="46" rx="8" fill="#E11D48" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceDanger</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#E11D48</text>
+    </g>
+
+    <g transform="translate(40,550)">
+      <rect width="218" height="46" rx="8" fill="#FFE4E6" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceDangerSoft</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#FFE4E6</text>
+    </g>
+    <g transform="translate(274,550)">
+      <rect width="218" height="46" rx="8" fill="#475569" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceBlocked</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#475569</text>
+    </g>
+    <g transform="translate(508,550)">
+      <rect width="218" height="46" rx="8" fill="#E2E8F0" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceBlockedSoft</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#E2E8F0</text>
+    </g>
+    <g transform="translate(742,550)">
+      <rect width="218" height="46" rx="8" fill="#F59E0B" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceWarning</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#F59E0B</text>
+    </g>
+
+    <g transform="translate(40,650)">
+      <rect width="218" height="46" rx="8" fill="#FF5252" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceError</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#FF5252</text>
+    </g>
+    <g transform="translate(274,650)">
+      <rect width="218" height="46" rx="8" fill="#10B981" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceSuccessAccent</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#10B981</text>
+    </g>
+    <g transform="translate(508,650)">
+      <rect width="218" height="46" rx="8" fill="#1E3A8A" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceRouteStart</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#1E3A8A</text>
+    </g>
+    <g transform="translate(742,650)">
+      <rect width="218" height="46" rx="8" fill="#EA580C" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceRouteEnd</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#EA580C</text>
+    </g>
+
+    <g transform="translate(40,750)">
+      <rect width="218" height="46" rx="8" fill="#334155" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceBlockedStrong</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#334155</text>
+    </g>
+    <g transform="translate(274,750)">
+      <rect width="218" height="46" rx="8" fill="#94A3B8" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceBlockedBorder</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#94A3B8</text>
+    </g>
+    <g transform="translate(508,750)">
+      <rect width="218" height="46" rx="8" fill="#6D28D9" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceRoleCoordinator</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#6D28D9</text>
+    </g>
+    <g transform="translate(742,750)">
+      <rect width="218" height="46" rx="8" fill="#EDE9FE" stroke="#1E4976"/>
+      <text x="0" y="64" fill="#FFFFFF" font-size="12" font-weight="600">LinceRoleCoordinatorSoft</text>
+      <text x="0" y="82" fill="#94A3B8" font-size="11">#EDE9FE</text>
+    </g>
+  </g>
+</svg>
