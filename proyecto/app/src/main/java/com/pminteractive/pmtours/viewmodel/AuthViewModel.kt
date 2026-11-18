@@ -25,6 +25,7 @@ import androidx.lifecycle.viewModelScope
 import com.pminteractive.pmtours.model.operadores.Usuario
 import com.pminteractive.pmtours.repository.AppContainer
 import com.pminteractive.pmtours.repository.AuthRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,8 +40,11 @@ sealed interface AuthUiState {
 }
 
 class AuthViewModel(
-    private val authRepository: AuthRepository = AppContainer.authRepository
+    private val authRepository: AuthRepository = AppContainer.authRepository,
+    scope: CoroutineScope? = null
 ) : ViewModel() {
+
+    private val coroutineScope: CoroutineScope = scope ?: viewModelScope
 
     // Estado reactivo que observará la pantalla LoginScreen
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Inactivo)
@@ -52,7 +56,7 @@ class AuthViewModel(
             return
         }
 
-        viewModelScope.launch {
+        coroutineScope.launch {
             _uiState.value = AuthUiState.Cargando
 
             val resultado = authRepository.login(usuario, contrasena)

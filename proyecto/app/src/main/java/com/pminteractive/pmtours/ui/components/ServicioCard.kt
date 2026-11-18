@@ -20,6 +20,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,6 +56,7 @@ fun ServicioCard(
         ),
         modifier = modifier
             .fillMaxWidth()
+            .testTag("servicio_card_${servicio.id}")
             .clickable { onCardClick() }
     ) {
         Column(
@@ -89,7 +91,9 @@ fun ServicioCard(
                 ) {
                     Text(
                         text = estilo.etiqueta,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                        modifier = Modifier
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                            .testTag("servicio_estado_${servicio.id}"),
                         color = estilo.texto,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold

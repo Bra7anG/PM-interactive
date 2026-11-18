@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -112,7 +113,8 @@ fun PerfilScreen(
                         text = usuario?.nombreCompleto ?: "Carlos Morales",
                         color = LinceTextPrimary,
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.testTag("perfil_nombre")
                     )
                     Text(
                         text = "${usuario?.rol?.name ?: "DRIVER"} · Base ${usuario?.sede?.nombreCiudad ?: "Santiago"}",
@@ -122,7 +124,8 @@ fun PerfilScreen(
                     Text(
                         text = "RUT: ${usuario?.rut ?: "18.452.123-K"}",
                         color = LinceTextSecondary,
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
+                        modifier = Modifier.testTag("perfil_rut")
                     )
                 }
             }
@@ -176,7 +179,8 @@ fun PerfilScreen(
                         text = montoFormateado,
                         color = LinceTextPrimary,
                         fontSize = 32.sp,
-                        fontWeight = FontWeight.Black
+                        fontWeight = FontWeight.Black,
+                        modifier = Modifier.testTag("perfil_total")
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -202,7 +206,8 @@ fun PerfilScreen(
                                     text = "${resumenLiquidacion.serviciosCompletados}",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = LinceSuccessAccent
+                                    color = LinceSuccessAccent,
+                                    modifier = Modifier.testTag("perfil_finalizados")
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
@@ -235,7 +240,8 @@ fun PerfilScreen(
                                     text = "${resumenLiquidacion.serviciosCanceladosConPago}",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = LinceWarning
+                                    color = LinceWarning,
+                                    modifier = Modifier.testTag("perfil_tarifa_protegida")
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
@@ -410,6 +416,7 @@ fun PerfilScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
+                    .testTag("btn_cerrar_sesion")
             ) {
                 Text(
                     text = "Cerrar Sesión Institucional",

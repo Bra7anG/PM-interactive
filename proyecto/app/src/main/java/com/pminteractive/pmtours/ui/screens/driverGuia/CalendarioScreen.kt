@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -267,7 +268,9 @@ fun CalendarioScreen(
             // 4. Calendario
             HorizontalCalendar(
                 state = calendarState,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("calendario"),
                 dayContent = { day ->
                     CeldaDiaCalendario(
                         day = day,
@@ -316,6 +319,7 @@ fun CalendarioScreen(
                         Switch(
                             checked = estaBloqueado,
                             enabled = puedeBloquear || estaBloqueado,
+                            modifier = Modifier.testTag("switch_bloqueo"),
                             onCheckedChange = { activar ->
                                 fechaSeleccionada?.let { fecha ->
                                     calendarioViewModel.alternarBloqueo(fecha, activar)
@@ -348,7 +352,8 @@ fun CalendarioScreen(
                             text = "Toca un día del calendario para gestionar tu turno",
                             color = LinceTextSecondary,
                             fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.testTag("calendario_prompt")
                         )
                     }
                 }
@@ -364,7 +369,9 @@ fun CalendarioScreen(
                 }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 4.dp)
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .testTag("calendario_aviso")
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_info),
@@ -494,6 +501,7 @@ private fun CeldaDiaCalendario(
                 .clip(RoundedCornerShape(10.dp))
                 .background(fondoCelda)
                 .then(bordeModifier)
+                .testTag("dia_${day.date}")
                 .clickable { onClick() },
             contentAlignment = Alignment.Center
         ) {

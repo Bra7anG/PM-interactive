@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -73,7 +74,11 @@ fun DetalleServicioScreen(
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Servicio no encontrado", color = LinceTextSecondary)
+                Text(
+                    text = "Servicio no encontrado",
+                    color = LinceTextSecondary,
+                    modifier = Modifier.testTag("detalle_no_encontrado")
+                )
             }
             return@Scaffold
         }
@@ -140,7 +145,8 @@ fun DetalleServicioScreen(
                     text = "Detalle del servicio",
                     color = LinceTextPrimary,
                     fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.testTag("detalle_titulo")
                 )
             }
 
@@ -377,7 +383,9 @@ fun DetalleServicioScreen(
                 Surface(
                     color = if (servicio.checkIn.aTiempo) LinceSuccessContainer else LinceErrorContainer,
                     shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("detalle_checkin")
                 ) {
                     Row(
                         modifier = Modifier.padding(12.dp),
@@ -416,6 +424,7 @@ fun DetalleServicioScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp)
+                            .testTag("btn_confirmar")
                     ) {
                         Text("Confirmar Recepción del Servicio", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
@@ -443,6 +452,7 @@ fun DetalleServicioScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(52.dp)
+                                .testTag("btn_checkin")
                         ) {
                             Text("Iniciar Servicio (Check-In GPS)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         }
@@ -494,6 +504,7 @@ fun DetalleServicioScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp)
+                            .testTag("btn_checkout")
                     ) {
                         Text("Finalizar Servicio (Check-Out)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
@@ -509,7 +520,9 @@ fun DetalleServicioScreen(
                             text = "Servicio completado exitosamente",
                             color = LinceTextSecondary,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(14.dp),
+                            modifier = Modifier
+                                .padding(14.dp)
+                                .testTag("detalle_estado"),
                             fontSize = 14.sp
                         )
                     }
@@ -525,7 +538,9 @@ fun DetalleServicioScreen(
                             text = "Servicio cancelado por coordinación o cliente (Tarifa resguardada)",
                             color = LinceError,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(14.dp),
+                            modifier = Modifier
+                                .padding(14.dp)
+                                .testTag("detalle_estado"),
                             fontSize = 13.sp
                         )
                     }
