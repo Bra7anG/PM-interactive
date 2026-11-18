@@ -54,7 +54,7 @@ class LoginUITest {
     fun camposVacios() {
         rule.onNodeWithTag("login_btn").performClick()
 
-        rule.onNodeWithText("Ingrese un correo institucional válido").assertIsDisplayed()
-        rule.onNodeWithText("La contraseña debe tener al menos 4 caracteres").assertIsDisplayed()
+        rule.onNodeWithText("Ingrese su usuario o correo").assertIsDisplayed()
+        rule.onNodeWithText("Contraseña incorrecta").assertIsDisplayed()
     }
 }

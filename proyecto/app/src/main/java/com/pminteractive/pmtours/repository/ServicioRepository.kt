@@ -21,8 +21,10 @@ import com.pminteractive.pmtours.model.servicio.TipoServicio
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import java.time.LocalDate
 
 interface ServicioRepository {
+    fun obtenerTodosLosServicios(): Flow<List<Servicio>>
     fun obtenerServiciosPorTrabajador(trabajadorId: String): Flow<List<Servicio>>
     fun obtenerServiciosPorSede(driverIdsDeSede: List<String>): Flow<List<Servicio>>
     suspend fun obtenerServicioPorId(servicioId: String): Servicio?
@@ -32,6 +34,10 @@ interface ServicioRepository {
 }
 
 class FakeServicioRepository : ServicioRepository {
+
+    private val hoy: LocalDate = LocalDate.now()
+
+    private fun fecha(dias: Long = 0): String = hoy.plusDays(dias).toString()
 
     private val _servicios = MutableStateFlow(
         listOf(
@@ -139,9 +145,223 @@ class FakeServicioRepository : ServicioRepository {
                 tarifaAcordada = 120000.0,
                 notasAgencia = "Revisar cadenas y permisos de acceso municipal.",
                 detalleItinerario = "Salida por Camino al Volcán hacia San José de Maipo."
+            ),
+            // 6. Agenda activa de Carlos para hoy (visible en Servicios y Panel Coordinador)
+            Servicio(
+                id = "SRV-000250",
+                numeroReserva = "WHFT223510",
+                titulo = "Transfer In: Aeropuerto SCL -> Hotel Plaza San Francisco",
+                tipo = TipoServicio.TRANSFER,
+                fecha = fecha(),
+                horaInicio = "08:30",
+                horaFinEstimada = "10:00",
+                lugarPickup = "Aeropuerto Internacional Arturo Merino Benítez",
+                lugarDropOff = "Hotel Plaza San Francisco, Santiago",
+                cantidadPasajeros = 2,
+                paxTexto = "2+0",
+                driverId = "TRA-001",
+                vehiculoId = "VEH-14",
+                guiaId = null,
+                estado = EstadoServicio.ASIGNADO,
+                tarifaAcordada = 45000.0,
+                notasAgencia = "Pasajeros con equipaje de ski.",
+                detalleItinerario = "Recepción en puerta 4 y traslado por Costanera Norte."
+            ),
+            // 7. Servicio confirmado de hoy
+            Servicio(
+                id = "SRV-000251",
+                numeroReserva = "WHFT223511",
+                titulo = "Transfer Out: Hotel Cumbres -> Aeropuerto SCL",
+                tipo = TipoServicio.TRANSFER,
+                fecha = fecha(),
+                horaInicio = "10:15",
+                horaFinEstimada = "11:45",
+                lugarPickup = "Hotel Cumbres Lastarria, Santiago",
+                lugarDropOff = "Aeropuerto Internacional Arturo Merino Benítez",
+                cantidadPasajeros = 3,
+                paxTexto = "3+0",
+                driverId = "TRA-001",
+                vehiculoId = "VEH-31",
+                guiaId = null,
+                estado = EstadoServicio.CONFIRMADO,
+                tarifaAcordada = 45000.0,
+                notasAgencia = "Salida con 3 horas de anticipación.",
+                detalleItinerario = "Ruta directa por Costanera Norte."
+            ),
+            // 8. Servicio rechazado para auditoría del coordinador
+            Servicio(
+                id = "SRV-000252",
+                numeroReserva = "WHFT223512",
+                titulo = "Excursión Half Day: Valle Nevado",
+                tipo = TipoServicio.EXCURSION,
+                fecha = fecha(),
+                horaInicio = "13:00",
+                horaFinEstimada = "18:30",
+                lugarPickup = "Hotel Barrio Lastarria, Santiago",
+                lugarDropOff = "Hotel Barrio Lastarria, Santiago",
+                cantidadPasajeros = 6,
+                paxTexto = "6+0",
+                driverId = "TRA-001",
+                vehiculoId = "VEH-31",
+                guiaId = null,
+                estado = EstadoServicio.RECHAZADO,
+                tarifaAcordada = 80000.0,
+                notasAgencia = "Reasignar a otro transportista disponible.",
+                detalleItinerario = "Salida por Avenida Las Condes hacia Valle Nevado."
+            ),
+            // 9. Servicio confirmado para mañana
+            Servicio(
+                id = "SRV-000253",
+                numeroReserva = "WHFT223513",
+                titulo = "Transfer In: Aeropuerto SCL -> Hotel Sheraton",
+                tipo = TipoServicio.TRANSFER,
+                fecha = fecha(1),
+                horaInicio = "09:00",
+                horaFinEstimada = "10:30",
+                lugarPickup = "Aeropuerto Internacional Arturo Merino Benítez",
+                lugarDropOff = "Hotel Sheraton, Providencia",
+                cantidadPasajeros = 2,
+                paxTexto = "2+0",
+                driverId = "TRA-001",
+                vehiculoId = "VEH-14",
+                guiaId = null,
+                estado = EstadoServicio.CONFIRMADO,
+                tarifaAcordada = 45000.0,
+                notasAgencia = "Vuelo LATAM 411 confirmado.",
+                detalleItinerario = "Traslado directo al hotel."
+            ),
+            // 10. Servicio finalizado ayer (suma a liquidación del mes actual)
+            Servicio(
+                id = "SRV-000254",
+                numeroReserva = "WHFT223514",
+                titulo = "Transfer Out: Hotel Lastarria -> Aeropuerto SCL",
+                tipo = TipoServicio.TRANSFER,
+                fecha = fecha(-1),
+                horaInicio = "06:00",
+                horaFinEstimada = "07:30",
+                lugarPickup = "Hotel Barrio Lastarria, Santiago",
+                lugarDropOff = "Aeropuerto Internacional Arturo Merino Benítez",
+                cantidadPasajeros = 2,
+                paxTexto = "2+0",
+                driverId = "TRA-001",
+                vehiculoId = "VEH-14",
+                guiaId = null,
+                estado = EstadoServicio.FINALIZADO,
+                tarifaAcordada = 45000.0,
+                notasAgencia = "Servicio ejecutado sin observaciones.",
+                detalleItinerario = "Salida temprana por Costanera Norte."
+            ),
+            // 11. Agenda de Valentina (Guía) en Puerto Varas
+            Servicio(
+                id = "SRV-000255",
+                numeroReserva = "WHFT223515",
+                titulo = "Servicio Guiado: Ruta Patrimonial Puerto Varas",
+                tipo = TipoServicio.GUIDED_SERVICE,
+                fecha = fecha(1),
+                horaInicio = "09:00",
+                horaFinEstimada = "13:00",
+                lugarPickup = "Plaza de Armas de Puerto Varas",
+                lugarDropOff = "Costanera Vicente Pérez Rosales",
+                cantidadPasajeros = 5,
+                paxTexto = "4+1",
+                driverId = null,
+                vehiculoId = null,
+                guiaId = "GUI-012",
+                estado = EstadoServicio.ASIGNADO,
+                tarifaAcordada = 60000.0,
+                notasAgencia = "Grupo alemán. Guía debe hablar alemán.",
+                detalleItinerario = "Recorrido por iglesias patrimoniales y costanera."
+            ),
+            // 12. Servicio guiado confirmado
+            Servicio(
+                id = "SRV-000256",
+                numeroReserva = "WHFT223516",
+                titulo = "Servicio Guiado: Volcán Osorno & Petrohué",
+                tipo = TipoServicio.GUIDED_SERVICE,
+                fecha = fecha(2),
+                horaInicio = "10:30",
+                horaFinEstimada = "17:00",
+                lugarPickup = "Hotel Cumbres Puerto Varas",
+                lugarDropOff = "Hotel Cumbres Puerto Varas",
+                cantidadPasajeros = 4,
+                paxTexto = "4+0",
+                driverId = null,
+                vehiculoId = null,
+                guiaId = "GUI-012",
+                estado = EstadoServicio.CONFIRMADO,
+                tarifaAcordada = 60000.0,
+                notasAgencia = "Llevar radio de comunicación y botiquín.",
+                detalleItinerario = "Salida hacia Petrohué y mirador del volcán."
+            ),
+            // 13. Servicio finalizado hoy para Valentina (suma al sueldo del mes)
+            Servicio(
+                id = "SRV-000257",
+                numeroReserva = "WHFT223517",
+                titulo = "Servicio Guiado: Ruta Patrimonial Puerto Varas",
+                tipo = TipoServicio.GUIDED_SERVICE,
+                fecha = fecha(0),
+                horaInicio = "09:00",
+                horaFinEstimada = "13:00",
+                lugarPickup = "Plaza de Armas de Puerto Varas",
+                lugarDropOff = "Costanera Vicente Pérez Rosales",
+                cantidadPasajeros = 5,
+                paxTexto = "4+1",
+                driverId = null,
+                vehiculoId = null,
+                guiaId = "GUI-012",
+                estado = EstadoServicio.FINALIZADO,
+                tarifaAcordada = 60000.0,
+                notasAgencia = "Servicio ejecutado sin observaciones.",
+                detalleItinerario = "Recorrido patrimonial por el centro de Puerto Varas."
+            ),
+            // 14. Cancelación protegida de Valentina (suma al sueldo del mes)
+            Servicio(
+                id = "SRV-000258",
+                numeroReserva = "WHFT223518",
+                titulo = "Servicio Guiado: Volcán Osorno & Petrohué",
+                tipo = TipoServicio.GUIDED_SERVICE,
+                fecha = fecha(0),
+                horaInicio = "15:00",
+                horaFinEstimada = "19:00",
+                lugarPickup = "Hotel Cumbres Puerto Varas",
+                lugarDropOff = "Hotel Cumbres Puerto Varas",
+                cantidadPasajeros = 4,
+                paxTexto = "4+0",
+                driverId = null,
+                vehiculoId = null,
+                guiaId = "GUI-012",
+                estado = EstadoServicio.CANCELADO,
+                tarifaAcordada = 60000.0,
+                notasAgencia = "Cancelación por no-show del pasajero. Tarifa resguardada.",
+                detalleItinerario = "Salida hacia Petrohué y mirador del volcán."
+            ),
+            // 15. Cancelación protegida de Carlos (suma al sueldo del mes)
+            Servicio(
+                id = "SRV-000259",
+                numeroReserva = "WHFT223519",
+                titulo = "Transfer In: Aeropuerto SCL -> Hotel Sheraton",
+                tipo = TipoServicio.TRANSFER,
+                fecha = fecha(0),
+                horaInicio = "07:00",
+                horaFinEstimada = "08:30",
+                lugarPickup = "Aeropuerto Internacional Arturo Merino Benítez",
+                lugarDropOff = "Hotel Sheraton, Providencia",
+                cantidadPasajeros = 2,
+                paxTexto = "2+0",
+                driverId = "TRA-001",
+                vehiculoId = "VEH-14",
+                guiaId = null,
+                estado = EstadoServicio.CANCELADO,
+                tarifaAcordada = 45000.0,
+                notasAgencia = "Cancelación por no-show del pasajero. Tarifa resguardada.",
+                detalleItinerario = "Traslado directo al hotel."
             )
         )
     )
+
+    override fun obtenerTodosLosServicios(): Flow<List<Servicio>> {
+        return _servicios.map { lista -> lista }
+    }
 
     override fun obtenerServiciosPorTrabajador(trabajadorId: String): Flow<List<Servicio>> {
         return _servicios.map { lista ->

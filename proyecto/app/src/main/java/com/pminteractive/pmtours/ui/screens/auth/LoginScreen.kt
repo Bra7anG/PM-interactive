@@ -22,7 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,6 +33,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import com.pminteractive.pmtours.R
 
+private val USUARIOS_SIMPLES = setOf("driver", "guia", "coordinador", "admin")
+private const val CLAVE_DEMO = "1234"
+
 @Composable
 fun LoginScreen(
     onLoginExitoso: (Usuario) -> Unit,
@@ -42,13 +44,16 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
 
-    var correo by remember { mutableStateOf("") }
+    var usuario by remember { mutableStateOf("") }
     var contrasena by remember { mutableStateOf("") }
     var intentoEnvio by remember { mutableStateOf(false) }
 
-    // Validaciones locales de los campos
-    val correoInvalido = intentoEnvio && (correo.isBlank() || !correo.contains("@"))
-    val contrasenaInvalida = intentoEnvio && (contrasena.length < 4)
+    // El correo exige "@", salvo los usuarios simples de demostración
+    val esUsuarioSimple = usuario.trim().lowercase() in USUARIOS_SIMPLES
+    val usuarioInvalido = intentoEnvio && (
+        usuario.isBlank() || (!usuario.contains("@") && !esUsuarioSimple)
+    )
+    val contrasenaInvalida = intentoEnvio && (contrasena != CLAVE_DEMO)
 
     // Redirige automáticamente cuando el login es correcto
     LaunchedEffect(uiState) {
@@ -141,16 +146,16 @@ fun LoginScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
-                    value = correo,
+                    value = usuario,
                     onValueChange = {
-                        correo = it
+                        usuario = it
                         if (intentoEnvio) intentoEnvio = false
                     },
                     placeholder = {
-                        Text("carlos.morales@pmtours.cl", color = LinceTextSecondary.copy(alpha = 0.6f))
+                        Text("usuario@pmtours.cl", color = LinceTextSecondary.copy(alpha = 0.6f))
                     },
                     singleLine = true,
-                    isError = correoInvalido,
+                    isError = usuarioInvalido,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
                         imeAction = ImeAction.Next
@@ -171,9 +176,9 @@ fun LoginScreen(
                         .fillMaxWidth()
                         .testTag("login_correo")
                 )
-                if (correoInvalido) {
+                if (usuarioInvalido) {
                     Text(
-                        text = "Ingrese un correo institucional válido",
+                        text = "Ingrese su usuario o correo",
                         color = LinceError,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(top = 4.dp, start = 4.dp)
@@ -229,7 +234,7 @@ fun LoginScreen(
                 )
                 if (contrasenaInvalida) {
                     Text(
-                        text = "La contraseña debe tener al menos 4 caracteres",
+                        text = "Contraseña incorrecta",
                         color = LinceError,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(top = 4.dp, start = 4.dp)
@@ -250,8 +255,8 @@ fun LoginScreen(
                     onClick = {
                         focusManager.clearFocus()
                         intentoEnvio = true
-                        if (!correoInvalido && !contrasenaInvalida && correo.isNotBlank() && contrasena.isNotBlank()) {
-                            viewModel.iniciarSesion(correo, contrasena)
+                        if (!usuarioInvalido && !contrasenaInvalida && usuario.isNotBlank() && contrasena.isNotBlank()) {
+                            viewModel.iniciarSesion(usuario, contrasena)
                         }
                     },
                     shape = RoundedCornerShape(14.dp),
@@ -271,18 +276,6 @@ fun LoginScreen(
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // 7. Nota inferior
-            Text(
-                text = "¿Olvidaste tu contraseña? — datos de prueba, sin credenciales reales",
-                color = LinceTextSecondary,
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center,
-                lineHeight = 16.sp,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
 
             Spacer(modifier = Modifier.height(24.dp))
         }

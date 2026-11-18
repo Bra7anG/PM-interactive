@@ -35,6 +35,7 @@ class DetalleServicioScreenUITest {
             PMTOURSTheme {
                 DetalleServicioScreen(
                     servicioId = servicioId,
+                    usuarioId = servicio.driverId ?: servicio.guiaId ?: "TRA-001",
                     onVolver = {},
                     viewModel = viewModel
                 )

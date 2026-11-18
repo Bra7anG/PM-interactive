@@ -96,6 +96,10 @@ class RepositorioServiciosFake(
 
     private val _servicios = MutableStateFlow(serviciosIniciales)
 
+    override fun obtenerTodosLosServicios(): Flow<List<Servicio>> {
+        return _servicios.map { lista -> lista }
+    }
+
     override fun obtenerServiciosPorTrabajador(trabajadorId: String): Flow<List<Servicio>> {
         return _servicios.map { lista ->
             lista.filter { it.driverId == trabajadorId || it.guiaId == trabajadorId }

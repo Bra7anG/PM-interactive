@@ -13,7 +13,7 @@
  *   mantiene un 'MutableStateFlow' privado (_uiState) para proteger las transiciones de estado.
  * - Ejecuta la verificación de credenciales de forma asíncrona en segundo plano mediante 'viewModelScope.launch',
  *   evitando congelar el hilo principal de la interfaz de usuario.
- * - Implementa validación previa de campos obligatorios (correo y contraseña no vacíos) antes de
+ * - Implementa validación previa de campos obligatorios (usuario y contraseña no vacíos) antes de
  *   consultar a 'authRepository.login()'.
  * - Ofrece la función 'cerrarSesion()' para invalidar la sesión actual en el repositorio y
  *   restablecer la pantalla al estado Inactivo.
@@ -23,8 +23,8 @@ package com.pminteractive.pmtours.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pminteractive.pmtours.model.operadores.Usuario
+import com.pminteractive.pmtours.repository.AppContainer
 import com.pminteractive.pmtours.repository.AuthRepository
-import com.pminteractive.pmtours.repository.FakeAuthRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,7 +40,7 @@ sealed interface AuthUiState {
 }
 
 class AuthViewModel(
-    private val authRepository: AuthRepository = FakeAuthRepository(),
+    private val authRepository: AuthRepository = AppContainer.authRepository,
     scope: CoroutineScope? = null
 ) : ViewModel() {
 
@@ -50,16 +50,16 @@ class AuthViewModel(
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Inactivo)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
-    fun iniciarSesion(correo: String, contrasena: String) {
-        if (correo.isBlank() || contrasena.isBlank()) {
-            _uiState.value = AuthUiState.Error("Debe ingresar correo y contraseña.")
+    fun iniciarSesion(usuario: String, contrasena: String) {
+        if (usuario.isBlank() || contrasena.isBlank()) {
+            _uiState.value = AuthUiState.Error("Debe ingresar usuario y contraseña.")
             return
         }
 
         coroutineScope.launch {
             _uiState.value = AuthUiState.Cargando
 
-            val resultado = authRepository.login(correo, contrasena)
+            val resultado = authRepository.login(usuario, contrasena)
 
             resultado.fold(
                 onSuccess = { usuario ->

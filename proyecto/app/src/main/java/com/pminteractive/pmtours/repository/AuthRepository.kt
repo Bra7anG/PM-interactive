@@ -19,19 +19,29 @@ import com.pminteractive.pmtours.model.datosoperativos.Vehiculo
 import com.pminteractive.pmtours.model.operadores.*
 
 interface AuthRepository {
-    suspend fun login(correo: String, contrasena: String): Result<Usuario>
+    suspend fun login(usuario: String, contrasena: String): Result<Usuario>
     fun obtenerUsuarioActual(): Usuario?
+    fun obtenerUsuarios(): List<Usuario>
     fun cerrarSesion()
 }
 
 class FakeAuthRepository : AuthRepository {
+
+    private val claveDemo = "1234"
+
+    private val credencialesSimples = mapOf(
+        "driver" to "TRA-001",
+        "guia" to "GUI-012",
+        "coordinador" to "CRD-201",
+        "admin" to "ADM-001"
+    )
 
     private val usuariosPrueba: List<Usuario> = listOf(
         Driver(
             id = "TRA-001",
             rut = "18.452.123-K",
             nombreCompleto = "Carlos Morales",
-            correo = "cccc",
+            correo = "carlos.morales@pmtours.cl",
             telefono = "+56911223344",
             sede = Sede.SANTIAGO,
             direccion = "Av. Providencia 1234, Santiago",
@@ -87,18 +97,27 @@ class FakeAuthRepository : AuthRepository {
 
     private var usuarioSesionActual: Usuario? = null
 
-    override suspend fun login(correo: String, contrasena: String): Result<Usuario> {
-        val usuario = usuariosPrueba.find { it.correo.equals(correo.trim(), ignoreCase = true) }
+    override suspend fun login(usuario: String, contrasena: String): Result<Usuario> {
+        val identificador = usuario.trim()
+        val idUsuarioSimple = credencialesSimples[identificador.lowercase()]
 
-        return if (usuario != null && contrasena.length >= 4) {
-            usuarioSesionActual = usuario
-            Result.success(usuario)
+        val usuarioEncontrado = if (idUsuarioSimple != null) {
+            usuariosPrueba.find { it.id == idUsuarioSimple }
+        } else {
+            usuariosPrueba.find { it.correo.equals(identificador, ignoreCase = true) }
+        }
+
+        return if (usuarioEncontrado != null && contrasena == claveDemo) {
+            usuarioSesionActual = usuarioEncontrado
+            Result.success(usuarioEncontrado)
         } else {
             Result.failure(Exception("Credenciales incorrectas o usuario no encontrado."))
         }
     }
 
     override fun obtenerUsuarioActual(): Usuario? = usuarioSesionActual
+
+    override fun obtenerUsuarios(): List<Usuario> = usuariosPrueba
 
     override fun cerrarSesion() {
         usuarioSesionActual = null

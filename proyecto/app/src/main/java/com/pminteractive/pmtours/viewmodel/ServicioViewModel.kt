@@ -21,7 +21,7 @@ import androidx.lifecycle.viewModelScope
 import com.pminteractive.pmtours.model.servicio.EstadoServicio
 import com.pminteractive.pmtours.model.servicio.RegistroHitoGps
 import com.pminteractive.pmtours.model.servicio.Servicio
-import com.pminteractive.pmtours.repository.FakeServicioRepository
+import com.pminteractive.pmtours.repository.AppContainer
 import com.pminteractive.pmtours.repository.ServicioRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -48,8 +48,8 @@ data class ResumenLiquidacion(
 )
 
 class ServicioViewModel(
-    private val repository: ServicioRepository = FakeServicioRepository(),
-    trabajadorIdInicial: String = "TRA-001",
+    private val repository: ServicioRepository = AppContainer.servicioRepository,
+    trabajadorIdInicial: String? = null,
     scope: CoroutineScope? = null
 ) : ViewModel() {
 
@@ -59,9 +59,10 @@ class ServicioViewModel(
     val servicios: StateFlow<List<Servicio>> = _servicios.asStateFlow()
 
     private var jobObservador: Job? = null
+    private var trabajadorActual: String? = null
 
     init {
-        cargarServiciosDelUsuario(trabajadorIdInicial)
+        trabajadorIdInicial?.let { cargarServiciosDelUsuario(it) }
     }
 
     /**
@@ -70,7 +71,16 @@ class ServicioViewModel(
      * - Servicios FINALIZADOS: Solo visibles si fueron ejecutados en el mes actual.
      */
     fun cargarServiciosDelUsuario(trabajadorId: String) {
+        if (trabajadorId.isBlank()) {
+            limpiar()
+            return
+        }
+        if (trabajadorId == trabajadorActual) return
+
+        trabajadorActual = trabajadorId
         jobObservador?.cancel()
+        _servicios.value = emptyList()
+
         jobObservador = coroutineScope.launch {
             repository.obtenerServiciosPorTrabajador(trabajadorId).collect { listaBruta ->
                 val mesActual = YearMonth.now()
@@ -93,6 +103,13 @@ class ServicioViewModel(
                 _servicios.value = listaDepurada
             }
         }
+    }
+
+    fun limpiar() {
+        jobObservador?.cancel()
+        jobObservador = null
+        trabajadorActual = null
+        _servicios.value = emptyList()
     }
 
     // Cálculo reactivo mensual para la pantalla de Perfil

@@ -79,7 +79,7 @@ class AuthViewModelTest {
         viewModel.iniciarSesion("", "")
 
         assertEquals(
-            AuthUiState.Error("Debe ingresar correo y contraseña."),
+            AuthUiState.Error("Debe ingresar usuario y contraseña."),
             viewModel.uiState.value
         )
         assertEquals(0, repositorio.llamadasLogin)

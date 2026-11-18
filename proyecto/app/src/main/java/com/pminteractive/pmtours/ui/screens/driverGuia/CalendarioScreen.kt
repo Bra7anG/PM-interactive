@@ -42,10 +42,13 @@ import com.kizitonwose.calendar.core.DayPosition
 import com.kizitonwose.calendar.core.daysOfWeek
 import com.pminteractive.pmtours.R
 import com.pminteractive.pmtours.model.operadores.Usuario
+import com.pminteractive.pmtours.model.servicio.EstadoServicio
 import com.pminteractive.pmtours.ui.components.OperadorBottomBar
 import com.pminteractive.pmtours.ui.navigation.Screen
 import com.pminteractive.pmtours.ui.theme.*
+import com.pminteractive.pmtours.viewmodel.CalendarioViewModel
 import com.pminteractive.pmtours.viewmodel.ServicioViewModel
+import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -57,9 +60,29 @@ import java.util.Locale
 fun CalendarioScreen(
     usuario: Usuario? = null,
     onCambiarTab: (String) -> Unit = {},
-    servicioViewModel: ServicioViewModel = viewModel()
+    servicioViewModel: ServicioViewModel = viewModel(),
+    calendarioViewModel: CalendarioViewModel = viewModel()
 ) {
+    LaunchedEffect(usuario?.id) {
+        usuario?.id?.let {
+            servicioViewModel.cargarServiciosDelUsuario(it)
+            calendarioViewModel.cargarDiasBloqueados(it)
+        }
+    }
+
     val serviciosAsignados by servicioViewModel.servicios.collectAsState()
+    val diasBloqueados by calendarioViewModel.diasBloqueados.collectAsState()
+    val fechasConServicio = remember(serviciosAsignados) {
+        serviciosAsignados
+            .filter {
+                it.estado == EstadoServicio.ASIGNADO ||
+                    it.estado == EstadoServicio.CONFIRMADO ||
+                    it.estado == EstadoServicio.EN_RUTA ||
+                    it.estado == EstadoServicio.FINALIZADO
+            }
+            .map { it.fecha }
+            .toSet()
+    }
 
     val mesActual = remember { YearMonth.now() }
     val inicioRango = remember { mesActual.minusMonths(12) }
@@ -72,22 +95,19 @@ fun CalendarioScreen(
         firstVisibleMonth = mesActual,
         firstDayOfWeek = diasSemana.first()
     )
+    val scope = rememberCoroutineScope()
 
     val hoy = remember { LocalDate.now() }
     val fechaMinimaBloqueo = remember(hoy) { hoy.plusDays(7) }
 
-    var diasBloqueados by remember {
-        mutableStateOf(
-            setOf(
-                hoy.plusDays(9),
-                hoy.plusDays(10)
-            )
-        )
-    }
-
     var fechaSeleccionada by remember { mutableStateOf<LocalDate?>(null) }
 
     val visibleMonth = calendarState.firstVisibleMonth.yearMonth
+    val textoMesVisible = remember(visibleMonth) {
+        visibleMonth.format(
+            DateTimeFormatter.ofPattern("MMMM yyyy", Locale("es", "CL"))
+        ).replaceFirstChar { it.uppercase() }
+    }
 
     LaunchedEffect(visibleMonth) {
         if (fechaSeleccionada != null && YearMonth.from(fechaSeleccionada) != visibleMonth) {
@@ -108,9 +128,9 @@ fun CalendarioScreen(
         }
     }
 
-    val tieneServicioSeleccionado = remember(fechaSeleccionada, serviciosAsignados) {
+    val tieneServicioSeleccionado = remember(fechaSeleccionada, fechasConServicio) {
         fechaSeleccionada?.let { fecha ->
-            serviciosAsignados.any { it.fecha == fecha.toString() }
+            fechasConServicio.contains(fecha.toString())
         } ?: false
     }
     val esFechaPasada = remember(fechaSeleccionada, hoy) {
@@ -160,14 +180,70 @@ fun CalendarioScreen(
             // 2. Leyenda superior
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                LeyendaPunto(color = Color(0xFFEF4444), texto = "Bloqueado")
-                Spacer(modifier = Modifier.width(20.dp))
-                LeyendaPunto(color = Color(0xFFF59E0B), texto = "Con servicio")
+                LeyendaEstado(color = LincePrimary, texto = "Disponible")
+                LeyendaEstado(color = LinceService, texto = "Con servicio")
+                LeyendaEstado(color = LinceBlockedBorder, texto = "Bloqueado", conCandado = true)
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 2.1 Selector del mes visible
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = {
+                        scope.launch {
+                            calendarState.animateScrollToMonth(visibleMonth.minusMonths(1))
+                        }
+                    },
+                    enabled = visibleMonth > inicioRango
+                ) {
+                    Text(
+                        text = "‹",
+                        color = if (visibleMonth > inicioRango) {
+                            LinceTextPrimary
+                        } else {
+                            LinceTextSecondary.copy(alpha = 0.3f)
+                        },
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Light
+                    )
+                }
+
+                Text(
+                    text = textoMesVisible,
+                    color = LinceTextPrimary,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                IconButton(
+                    onClick = {
+                        scope.launch {
+                            calendarState.animateScrollToMonth(visibleMonth.plusMonths(1))
+                        }
+                    },
+                    enabled = visibleMonth < finRango
+                ) {
+                    Text(
+                        text = "›",
+                        color = if (visibleMonth < finRango) {
+                            LinceTextPrimary
+                        } else {
+                            LinceTextSecondary.copy(alpha = 0.3f)
+                        },
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Light
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
 
             // 3. Fila de Días de la Semana
             Row(
@@ -200,7 +276,7 @@ fun CalendarioScreen(
                         day = day,
                         esSeleccionado = day.date == fechaSeleccionada,
                         estaBloqueado = diasBloqueados.contains(day.date),
-                        tieneServicio = serviciosAsignados.any { it.fecha == day.date.toString() },
+                        tieneServicio = fechasConServicio.contains(day.date.toString()),
                         onClick = { fechaSeleccionada = day.date }
                     )
                 }
@@ -234,7 +310,7 @@ fun CalendarioScreen(
                             )
                             Text(
                                 text = if (estaBloqueado) "Día marcado como libre" else "Día disponible",
-                                color = if (estaBloqueado) Color(0xFFEF4444) else LinceCyan,
+                                color = if (estaBloqueado) LinceBlockedBorder else LincePrimary,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -245,15 +321,13 @@ fun CalendarioScreen(
                             enabled = puedeBloquear || estaBloqueado,
                             modifier = Modifier.testTag("switch_bloqueo"),
                             onCheckedChange = { activar ->
-                                diasBloqueados = if (activar) {
-                                    diasBloqueados + fechaSeleccionada!!
-                                } else {
-                                    diasBloqueados - fechaSeleccionada!!
+                                fechaSeleccionada?.let { fecha ->
+                                    calendarioViewModel.alternarBloqueo(fecha, activar)
                                 }
                             },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
-                                checkedTrackColor = Color(0xFFEF4444),
+                                checkedTrackColor = LinceBlocked,
                                 uncheckedThumbColor = Color.White,
                                 uncheckedTrackColor = LinceSurfaceBorder
                             )
@@ -302,13 +376,13 @@ fun CalendarioScreen(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_info),
                         contentDescription = null,
-                        tint = LinceTextSecondary,
+                        tint = LinceWarning,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = motivoError,
-                        color = LinceTextSecondary,
+                        color = LinceWarning,
                         fontSize = 12.sp
                     )
                 }
@@ -367,12 +441,21 @@ fun CalendarioScreen(
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Medium
                                 )
-                                Text(
-                                    text = "Día libre",
-                                    color = Color(0xFFEF4444),
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_lock),
+                                        contentDescription = null,
+                                        tint = LinceBlockedBorder,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "Día libre",
+                                        color = LinceBlockedBorder,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
                             }
                         }
                     }
@@ -394,21 +477,21 @@ private fun CeldaDiaCalendario(
 ) {
     if (day.position == DayPosition.MonthDate) {
         val fondoCelda = when {
-            tieneServicio -> Color(0xFFFEF3C7)
-            estaBloqueado -> Color(0xFFFEE2E2)
+            tieneServicio -> LinceServiceSoft
+            estaBloqueado -> LinceBlockedStrong
             else -> LinceSurface
         }
 
         val colorTexto = when {
-            tieneServicio -> Color(0xFFB45309)
-            estaBloqueado -> Color(0xFFDC2626)
+            tieneServicio -> LinceService
+            estaBloqueado -> LinceBlockedSoft
             else -> LinceTextPrimary
         }
 
-        val bordeModifier = if (esSeleccionado) {
-            Modifier.border(2.dp, Color(0xFFF97316), RoundedCornerShape(10.dp))
-        } else {
-            Modifier
+        val bordeModifier = when {
+            esSeleccionado -> Modifier.border(2.dp, LinceSelectedBorder, RoundedCornerShape(10.dp))
+            estaBloqueado && !tieneServicio -> Modifier.border(1.dp, LinceBlockedBorder, RoundedCornerShape(10.dp))
+            else -> Modifier
         }
 
         Box(
@@ -428,6 +511,29 @@ private fun CeldaDiaCalendario(
                 fontWeight = if (tieneServicio || estaBloqueado || esSeleccionado) FontWeight.Bold else FontWeight.Medium,
                 color = colorTexto
             )
+
+            if (tieneServicio) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 3.dp)
+                        .size(4.dp)
+                        .clip(CircleShape)
+                        .background(LinceService)
+                )
+            }
+
+            if (estaBloqueado && !tieneServicio) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_lock),
+                    contentDescription = null,
+                    tint = LinceBlockedSoft,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(2.dp)
+                        .size(9.dp)
+                )
+            }
         }
     } else {
         Box(
@@ -446,19 +552,32 @@ private fun CeldaDiaCalendario(
 }
 
 @Composable
-private fun LeyendaPunto(color: Color, texto: String) {
+private fun LeyendaEstado(
+    color: Color,
+    texto: String,
+    conCandado: Boolean = false
+) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
+        if (conCandado) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_lock),
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(14.dp)
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .clip(CircleShape)
+                    .background(color)
+            )
+        }
+        Spacer(modifier = Modifier.width(6.dp))
         Text(
             text = texto,
             color = LinceTextSecondary,
-            fontSize = 13.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Medium
         )
     }
