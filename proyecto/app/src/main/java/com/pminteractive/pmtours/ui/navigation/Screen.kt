@@ -14,8 +14,9 @@ sealed class Screen(val route: String) {
         fun crearRuta(servicioId: String) = "detalle_servicio/$servicioId"
     }
 
-    // Panel del Coordinador
+    // Panel del Coordinador (3 pestañas)
     data object PanelCoordinador : Screen("coordinador_panel")
+    data object CrearServicioCoordinador : Screen("coordinador_crear")
     data object PerfilCoordinador : Screen("coordinador_perfil")
 
     // Panel del Administrador

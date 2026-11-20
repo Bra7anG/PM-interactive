@@ -9,20 +9,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pminteractive.pmtours.model.operadores.Usuario
-import com.pminteractive.pmtours.ui.components.PanelBottomBar
+import com.pminteractive.pmtours.ui.components.CoordinadorBottomBar
 import com.pminteractive.pmtours.ui.navigation.Screen
 import com.pminteractive.pmtours.ui.theme.*
 import com.pminteractive.pmtours.viewmodel.CoordinadorViewModel
@@ -34,25 +30,19 @@ fun PerfilCoordinadorScreen(
     onCambiarTab: (String) -> Unit = {},
     viewModel: CoordinadorViewModel = viewModel()
 ) {
-    LaunchedEffect(usuario?.sede) {
-        usuario?.sede?.let { viewModel.cargarServiciosDeSede(it) }
-    }
-
-    val resumen by viewModel.resumen.collectAsState()
-
     val iniciales = usuario?.nombreCompleto?.split(" ")
         ?.mapNotNull { it.firstOrNull()?.toString() }
         ?.take(2)
         ?.joinToString("") ?: "CO"
 
+    val sedeBase = usuario?.sede?.nombreCiudad ?: "Santiago"
+    val codigoSede = usuario?.sede?.codigo ?: "SCL"
+
     Scaffold(
         containerColor = LinceBackground,
         bottomBar = {
-            PanelBottomBar(
+            CoordinadorBottomBar(
                 rutaActual = Screen.PerfilCoordinador.route,
-                rutaPrincipal = Screen.PanelCoordinador.route,
-                etiquetaPrincipal = "Panel",
-                rutaPerfil = Screen.PerfilCoordinador.route,
                 onNavegar = onCambiarTab
             )
         }
@@ -66,6 +56,7 @@ fun PerfilCoordinadorScreen(
         ) {
             Spacer(modifier = Modifier.height(20.dp))
 
+            // Cabecera de identidad
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -94,20 +85,22 @@ fun PerfilCoordinadorScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "${usuario?.rol?.name ?: "COORDINADOR"} · Base ${usuario?.sede?.nombreCiudad ?: "Santiago"}",
+                        text = "Coordinador de Operaciones · Base $sedeBase",
                         color = LinceTextSecondary,
                         fontSize = 13.sp
                     )
                     Text(
-                        text = "RUT: ${usuario?.rut ?: "15.321.654-8"}",
-                        color = LinceTextSecondary,
-                        fontSize = 12.sp
+                        text = "ID: ${usuario?.id ?: "CRD-201"}",
+                        color = LinceCyan,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(22.dp))
 
+            // Tarjeta de Alcance Operativo
             Surface(
                 color = LinceSurface,
                 shape = RoundedCornerShape(18.dp),
@@ -116,44 +109,39 @@ fun PerfilCoordinadorScreen(
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(18.dp)) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
                     Text(
-                        text = "Resumen de supervisión",
+                        text = "Alcance operativo",
                         color = LinceCyan,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
 
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        MetricaSupervision(
-                            valor = resumen.pendientes,
-                            etiqueta = "Pendientes",
-                            color = LincePending,
-                            modifier = Modifier.weight(1f)
-                        )
-                        MetricaSupervision(
-                            valor = resumen.confirmados,
-                            etiqueta = "Confirmados",
-                            color = LinceSuccess,
-                            modifier = Modifier.weight(1f)
-                        )
-                        MetricaSupervision(
-                            valor = resumen.rechazados,
-                            etiqueta = "Rechazados",
-                            color = LinceDanger,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                    FilaPerfilInfo(
+                        etiqueta = "Sede principal",
+                        valor = "$sedeBase ($codigoSede)"
+                    )
+                    FilaPerfilInfo(
+                        etiqueta = "Cobertura de red",
+                        valor = "Santiago, Puerto Varas y Punta Arenas"
+                    )
+                    FilaPerfilInfo(
+                        etiqueta = "Atribuciones del rol",
+                        valor = "Creación y asignación de servicios, supervisión de flota/guías y cancelación operativa"
+                    )
+                    FilaPerfilInfo(
+                        etiqueta = "Sincronización",
+                        valor = "Conectado a Lince API · Southbound"
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Datos institucionales
             Surface(
                 color = LinceSurface,
                 shape = RoundedCornerShape(16.dp),
@@ -162,28 +150,27 @@ fun PerfilCoordinadorScreen(
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Text(
-                        text = "Datos de contacto",
+                        text = "Contacto institucional",
                         color = LinceCyan,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = "Correo: ${usuario?.correo ?: "luis.figueroa@pmtours.cl"}",
-                        color = LinceTextPrimary,
-                        fontSize = 14.sp
+                    FilaPerfilInfo(
+                        etiqueta = "Correo",
+                        valor = usuario?.correo ?: "luis.figueroa@pmtours.cl"
                     )
-                    Text(
-                        text = "Teléfono: ${usuario?.telefono ?: "+56999881122"}",
-                        color = LinceTextSecondary,
-                        fontSize = 13.sp
+                    FilaPerfilInfo(
+                        etiqueta = "Teléfono",
+                        valor = usuario?.telefono ?: "+56999881122"
                     )
-                    Text(
-                        text = "Dirección: ${usuario?.direccion ?: "Moneda 920, Santiago Centro"}",
-                        color = LinceTextSecondary,
-                        fontSize = 12.sp
+                    FilaPerfilInfo(
+                        etiqueta = "Oficina",
+                        valor = usuario?.direccion ?: "Moneda 920, Santiago Centro"
                     )
                 }
             }
@@ -214,33 +201,18 @@ fun PerfilCoordinadorScreen(
 }
 
 @Composable
-private fun MetricaSupervision(
-    valor: Int,
-    etiqueta: String,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        color = LinceBackground,
-        shape = RoundedCornerShape(12.dp),
-        border = CardDefaults.outlinedCardBorder().copy(
-            brush = SolidColor(LinceSurfaceBorder)
-        ),
-        modifier = modifier
-    ) {
-        Column(modifier = Modifier.padding(10.dp)) {
-            Text(
-                text = valor.toString(),
-                color = color,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = etiqueta,
-                color = LinceTextSecondary,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Medium
-            )
-        }
+private fun FilaPerfilInfo(etiqueta: String, valor: String) {
+    Column {
+        Text(
+            text = etiqueta,
+            color = LinceTextSecondary,
+            fontSize = 11.sp
+        )
+        Text(
+            text = valor,
+            color = LinceTextPrimary,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Medium
+        )
     }
 }

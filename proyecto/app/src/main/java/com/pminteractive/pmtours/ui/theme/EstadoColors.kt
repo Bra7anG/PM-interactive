@@ -15,5 +15,5 @@ fun EstadoServicio.estiloVisual(): EstadoServicioVisual = when (this) {
     EstadoServicio.EN_RUTA -> EstadoServicioVisual(LinceServiceSoft, LinceService, "En ruta")
     EstadoServicio.FINALIZADO -> EstadoServicioVisual(LinceFinishedSoft, LinceFinished, "Finalizado")
     EstadoServicio.RECHAZADO -> EstadoServicioVisual(LinceDangerSoft, LinceDanger, "Rechazado")
-    EstadoServicio.CANCELADO -> EstadoServicioVisual(LinceDangerSoft, LinceDanger, "Cancelado")
+    EstadoServicio.CANCELADO -> EstadoServicioVisual(LinceCancelledSoft, LinceCancelled, "Cancelado")
 }

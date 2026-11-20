@@ -16,31 +16,34 @@ val LincePrimary = LinceCyan
 val LincePrimaryPressed = LinceCyanHover
 val LinceSelectedBorder = LinceCyan
 
-val LincePending = Color(0xFFB45309)
-val LincePendingSoft = Color(0xFFFFE5D0)
-val LinceSuccess = Color(0xFF15803D)
-val LinceSuccessSoft = Color(0xFFD1F2D9)
-val LinceService = Color(0xFF0369A1)
-val LinceServiceSoft = Color(0xFFE0F2FE)
+// Estados de servicio adaptados a modo oscuro (texto luminoso + fondo translúcido)
+val LincePending = Color(0xFFFBBF24)
+val LincePendingSoft = Color(0x24FBBF24)
+val LinceSuccess = Color(0xFF34D399)
+val LinceSuccessSoft = Color(0x2434D399)
+val LinceService = Color(0xFF38BDF8)
+val LinceServiceSoft = Color(0x2438BDF8)
 val LinceFinished = Color(0xFF94A3B8)
-val LinceFinishedSoft = Color(0xFF334155)
+val LinceFinishedSoft = Color(0x2994A3B8)
 val LinceFinishedSurface = Color(0xFF1E293B)
-val LinceDanger = Color(0xFFE11D48)
-val LinceDangerSoft = Color(0xFFFFE4E6)
+val LinceDanger = Color(0xFFFB7185)
+val LinceDangerSoft = Color(0x24FB7185)
+val LinceCancelled = Color(0xFFCBD5E1)
+val LinceCancelledSoft = Color(0xFF1E293B)
 
 val LinceWarning = Color(0xFFF59E0B)
 val LinceSuccessAccent = Color(0xFF10B981)
 val LinceSuccessContainer = Color(0x2610B981)
 
-val LinceBlocked = Color(0xFF475569)
-val LinceBlockedSoft = Color(0xFFE2E8F0)
+val LinceBlocked = Color(0xFF64748B)
+val LinceBlockedSoft = Color(0x2464748B)
 val LinceBlockedStrong = Color(0xFF334155)
 val LinceBlockedBorder = Color(0xFF94A3B8)
 
 val LinceRoleAdmin = LinceService
 val LinceRoleAdminSoft = LinceServiceSoft
-val LinceRoleCoordinator = Color(0xFF6D28D9)
-val LinceRoleCoordinatorSoft = Color(0xFFEDE9FE)
+val LinceRoleCoordinator = Color(0xFFA78BFA)
+val LinceRoleCoordinatorSoft = Color(0x24A78BFA)
 val LinceRoleDriver = LincePending
 val LinceRoleDriverSoft = LincePendingSoft
 val LinceRoleGuide = LinceSuccess

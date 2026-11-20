@@ -10,17 +10,18 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.pminteractive.pmtours.model.datosoperativos.RolUsuario
-import com.pminteractive.pmtours.model.operadores.Usuario
 import com.pminteractive.pmtours.repository.AppContainer
 import com.pminteractive.pmtours.ui.screens.administrador.PanelAdministradorScreen
 import com.pminteractive.pmtours.ui.screens.administrador.PerfilAdministradorScreen
 import com.pminteractive.pmtours.ui.screens.auth.LoginScreen
+import com.pminteractive.pmtours.ui.screens.coordinador.CrearServicioScreen
 import com.pminteractive.pmtours.ui.screens.coordinador.PanelCoordinadorScreen
 import com.pminteractive.pmtours.ui.screens.coordinador.PerfilCoordinadorScreen
 import com.pminteractive.pmtours.ui.screens.driverGuia.CalendarioScreen
 import com.pminteractive.pmtours.ui.screens.driverGuia.DetalleServicioScreen
 import com.pminteractive.pmtours.ui.screens.driverGuia.PerfilScreen
 import com.pminteractive.pmtours.ui.screens.driverGuia.ServiciosScreen
+import com.pminteractive.pmtours.viewmodel.CoordinadorViewModel
 import com.pminteractive.pmtours.viewmodel.ServicioViewModel
 
 @Composable
@@ -31,6 +32,7 @@ fun AppNavigation(
         mutableStateOf(AppContainer.authRepository.obtenerUsuarioActual())
     }
     val servicioViewModel: ServicioViewModel = viewModel()
+    val coordinadorViewModel: CoordinadorViewModel = viewModel()
 
     LaunchedEffect(usuarioSesion?.id) {
         usuarioSesion?.id?.let { servicioViewModel.cargarServiciosDelUsuario(it) }
@@ -88,13 +90,12 @@ fun AppNavigation(
             )
         }
 
-        // 2. Tab Servicios
+        // 2. Tab Servicios (Operador)
         composable(Screen.Servicios.route) {
             ServiciosScreen(
                 usuarioId = usuarioSesion?.id ?: "TRA-001",
                 nombreUsuario = primerNombre,
                 onServicioClick = { servicio ->
-                    // Navega pasando el ID del viaje seleccionado
                     navController.navigate(Screen.DetalleServicio.crearRuta(servicio.id))
                 },
                 onCambiarTab = cambiarTab,
@@ -102,7 +103,7 @@ fun AppNavigation(
             )
         }
 
-        // 3. Detalle del Servicio (Ruta con parámetro servicioId)
+        // 3. Detalle del Servicio
         composable(
             route = Screen.DetalleServicio.route,
             arguments = listOf(navArgument("servicioId") { type = NavType.StringType })
@@ -116,7 +117,7 @@ fun AppNavigation(
             )
         }
 
-        // 3. Tab Calendario
+        // 4. Tab Calendario (Operador)
         composable(Screen.Calendario.route) {
             CalendarioScreen(
                 usuario = usuarioSesion,
@@ -125,7 +126,7 @@ fun AppNavigation(
             )
         }
 
-        // 5. Tab Perfil
+        // 5. Tab Perfil (Operador)
         composable(Screen.Perfil.route) {
             PerfilScreen(
                 usuario = usuarioSesion,
@@ -135,12 +136,24 @@ fun AppNavigation(
             )
         }
 
-        // 6. Panel Coordinador
+        // 6. Panel Coordinador (3 pestañas: Inicio, Crear, Perfil)
         composable(Screen.PanelCoordinador.route) {
             PanelCoordinadorScreen(
                 usuario = usuarioSesion,
                 onCambiarTab = cambiarTab,
-                onCerrarSesion = cerrarSesion
+                onCerrarSesion = cerrarSesion,
+                viewModel = coordinadorViewModel
+            )
+        }
+
+        composable(Screen.CrearServicioCoordinador.route) {
+            CrearServicioScreen(
+                usuario = usuarioSesion,
+                onCambiarTab = cambiarTab,
+                onServicioCreado = {
+                    coordinadorViewModel.recargarTodo()
+                    cambiarTab(Screen.PanelCoordinador.route)
+                }
             )
         }
 
@@ -148,7 +161,8 @@ fun AppNavigation(
             PerfilCoordinadorScreen(
                 usuario = usuarioSesion,
                 onCambiarTab = cambiarTab,
-                onCerrarSesion = cerrarSesion
+                onCerrarSesion = cerrarSesion,
+                viewModel = coordinadorViewModel
             )
         }
 
