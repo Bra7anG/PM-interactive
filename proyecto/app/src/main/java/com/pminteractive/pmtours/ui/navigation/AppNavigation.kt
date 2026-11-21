@@ -61,6 +61,11 @@ fun AppNavigation(
             else -> Screen.Servicios.route
         }
         AppContainer.authRepository.cerrarSesion()
+        // Limpiamos las credenciales aquí también por seguridad al cerrar sesión manual
+        AppContainer.sharedPreferences.edit()
+            .remove("saved_user")
+            .remove("saved_pass")
+            .apply()
         servicioViewModel.limpiar()
         usuarioSesion = null
         navController.navigate(Screen.Login.route) {

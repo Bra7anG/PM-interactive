@@ -3,6 +3,7 @@ package com.pminteractive.pmtours.repository
 import com.pminteractive.pmtours.model.servicio.EstadoServicio
 import com.pminteractive.pmtours.model.servicio.RegistroHitoGps
 import com.pminteractive.pmtours.model.servicio.Servicio
+import com.pminteractive.pmtours.model.servicio.TipoServicio
 import com.pminteractive.pmtours.network.LinceApiService
 import com.pminteractive.pmtours.network.toDomain
 import kotlinx.coroutines.flow.Flow
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import java.time.LocalDate
 
 interface ServicioRepository {
     fun obtenerTodosLosServicios(): Flow<List<Servicio>>
@@ -27,19 +29,18 @@ class HybridServicioRepository(
     private val coordinadorRepository: CoordinadorRepository
 ) : ServicioRepository {
 
-    // Caché en memoria de los servicios descargados desde la API para el operador activo
     private val _serviciosRemotos = MutableStateFlow<List<Servicio>>(emptyList())
+
+    // Caché en memoria por código de trabajador (sobrevive a cortes de red en ruta)
+    private val cachePorTrabajador = mutableMapOf<String, List<Servicio>>()
 
     override fun obtenerTodosLosServicios(): Flow<List<Servicio>> {
         return combinarConEstadoCompartido(_serviciosRemotos)
     }
 
     override fun obtenerServiciosPorTrabajador(trabajadorId: String): Flow<List<Servicio>> = flow {
-        // 1. Descarga desde la API los servicios reales del trabajador (si existe en Southbound)
         cargarServiciosRemotosDelTrabajador(trabajadorId)
 
-        // 2. Emite de forma reactiva la combinación de:
-        //    servicios de API + servicios creados por el Coordinador + cambios de estado en vivo
         emitAll(
             combinarConEstadoCompartido(_serviciosRemotos) { servicio ->
                 servicio.driverId.equals(trabajadorId, ignoreCase = true) ||
@@ -59,8 +60,8 @@ class HybridServicioRepository(
             coordinadorRepository.observarServiciosLocales().first()
         }.getOrDefault(emptyList())
 
-        val encontrado = (locales + _serviciosRemotos.value).find { it.id == servicioId }
-            ?: return null
+        val todosEnMemoria = locales + _serviciosRemotos.value + cachePorTrabajador.values.flatten()
+        val encontrado = todosEnMemoria.find { it.id == servicioId } ?: return null
 
         return aplicarOverride(encontrado, coordinadorRepository.observarCambiosEstado().value)
     }
@@ -101,13 +102,11 @@ class HybridServicioRepository(
             coordinadorRepository.observarServiciosLocales(),
             coordinadorRepository.observarCambiosEstado()
         ) { remotos, locales, cambios ->
-            val unificados = (locales + remotos)
+            (locales + remotos)
                 .distinctBy { it.id }
                 .filter(filtro)
                 .map { aplicarOverride(it, cambios) }
                 .sortedWith(compareBy({ it.fecha }, { it.horaInicio }))
-
-            unificados
         }
     }
 
@@ -126,10 +125,9 @@ class HybridServicioRepository(
     private suspend fun cargarServiciosRemotosDelTrabajador(trabajadorId: String) {
         val codigo = trabajadorId.trim().uppercase()
 
-        runCatching {
+        val resultadoRemoto = runCatching {
             when {
                 codigo.startsWith("TRA-") -> {
-                    // Busca el ID numérico real del transportista (ej. "TRA-021" -> 21)
                     val idNumerico = apiService.getTransportistas(q = codigo, activo = null, pageSize = 20)
                         .data
                         .find { it.codigo.equals(codigo, ignoreCase = true) }
@@ -137,16 +135,16 @@ class HybridServicioRepository(
                         ?: codigo.substringAfter("-").toIntOrNull()
 
                     if (idNumerico != null) {
-                        val lista = apiService.getServicios(
+                        apiService.getServicios(
                             transportistaId = idNumerico,
                             pageSize = 100
                         ).data.map { it.toDomain() }
-                        _serviciosRemotos.value = lista
+                    } else {
+                        emptyList()
                     }
                 }
 
                 codigo.startsWith("GUI-") -> {
-                    // Busca el ID numérico real del guía (ej. "GUI-012" -> 12)
                     val idNumerico = apiService.getGuias(q = codigo, activo = null, pageSize = 20)
                         .data
                         .find { it.codigo.equals(codigo, ignoreCase = true) }
@@ -154,14 +152,100 @@ class HybridServicioRepository(
                         ?: codigo.substringAfter("-").toIntOrNull()
 
                     if (idNumerico != null) {
-                        val lista = apiService.getServicios(
+                        apiService.getServicios(
                             guiaId = idNumerico,
                             pageSize = 100
                         ).data.map { it.toDomain() }
-                        _serviciosRemotos.value = lista
+                    } else {
+                        emptyList()
                     }
                 }
+
+                else -> emptyList()
             }
+        }
+
+        resultadoRemoto.onSuccess { listaApi ->
+            // Guarda en caché de sesión y actualiza el flujo activo
+            cachePorTrabajador[codigo] = listaApi
+            _serviciosRemotos.value = listaApi
+        }.onFailure {
+            // Sin internet o API apagada: conserva la última caché en memoria o usa respaldo offline
+            val enCache = cachePorTrabajador[codigo]
+            _serviciosRemotos.value = enCache ?: generarRespaldoOffline(codigo)
+        }
+    }
+
+    private fun generarRespaldoOffline(codigo: String): List<Servicio> {
+        val hoy = LocalDate.now().toString()
+        val manana = LocalDate.now().plusDays(1).toString()
+
+        return if (codigo.startsWith("GUI-")) {
+            listOf(
+                Servicio(
+                    id = "SRV-OFF-201",
+                    numeroReserva = "WHFT-OFF-01",
+                    titulo = "Servicio Guiado: City Tour Histórico (Respaldo Offline)",
+                    tipo = TipoServicio.GUIDED_SERVICE,
+                    fecha = hoy,
+                    horaInicio = "09:30",
+                    horaFinEstimada = "13:00",
+                    lugarPickup = "Hotel Barrio Lastarria, Santiago",
+                    lugarDropOff = "Plaza de Armas, Santiago",
+                    cantidadPasajeros = 4,
+                    paxTexto = "4+0",
+                    driverId = null,
+                    vehiculoId = null,
+                    guiaId = codigo,
+                    estado = EstadoServicio.CONFIRMADO,
+                    tarifaAcordada = 60000.0,
+                    notasAgencia = "Modo respaldo local activo por falta de conexión con servidor.",
+                    detalleItinerario = "Recorrido patrimonial centro histórico."
+                )
+            )
+        } else {
+            listOf(
+                Servicio(
+                    id = "SRV-OFF-101",
+                    numeroReserva = "WHFT-OFF-02",
+                    titulo = "Transfer In: Aeropuerto SCL -> Hotel Providencia (Respaldo Offline)",
+                    tipo = TipoServicio.TRANSFER,
+                    fecha = hoy,
+                    horaInicio = "10:00",
+                    horaFinEstimada = "11:30",
+                    lugarPickup = "Aeropuerto Internacional Arturo Merino Benítez",
+                    lugarDropOff = "Hotel Sheraton, Providencia",
+                    cantidadPasajeros = 2,
+                    paxTexto = "2+0",
+                    driverId = codigo,
+                    vehiculoId = "VEH-1",
+                    guiaId = null,
+                    estado = EstadoServicio.ASIGNADO,
+                    tarifaAcordada = 45000.0,
+                    notasAgencia = "Modo respaldo local activo por falta de conexión con servidor.",
+                    detalleItinerario = "Traslado directo por Costanera Norte."
+                ),
+                Servicio(
+                    id = "SRV-OFF-102",
+                    numeroReserva = "WHFT-OFF-03",
+                    titulo = "Excursión Viña Concha y Toro (Respaldo Offline)",
+                    tipo = TipoServicio.EXCURSION,
+                    fecha = manana,
+                    horaInicio = "09:00",
+                    horaFinEstimada = "14:30",
+                    lugarPickup = "Hotel Cumbres Lastarria",
+                    lugarDropOff = "Hotel Cumbres Lastarria",
+                    cantidadPasajeros = 3,
+                    paxTexto = "3+0",
+                    driverId = codigo,
+                    vehiculoId = "VEH-1",
+                    guiaId = null,
+                    estado = EstadoServicio.CONFIRMADO,
+                    tarifaAcordada = 80000.0,
+                    notasAgencia = "Degustación incluida.",
+                    detalleItinerario = "Salida hacia Pirque y retorno."
+                )
+            )
         }
     }
 }

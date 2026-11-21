@@ -59,7 +59,6 @@ class CoordinadorViewModel(
     private val _guias = MutableStateFlow<List<GuiaDto>>(emptyList())
     val guias: StateFlow<List<GuiaDto>> = _guias.asStateFlow()
 
-    // Diccionario código -> nombre humano (ej: "TRA-001" -> "Catalina Ibáñez Campos")
     private val _nombresTrabajadores = MutableStateFlow<DiccionarioNombres>(emptyMap())
     val nombresTrabajadores: StateFlow<DiccionarioNombres> = _nombresTrabajadores.asStateFlow()
 
@@ -78,6 +77,17 @@ class CoordinadorViewModel(
     private var sedeInicializada = false
     private var jobBusqueda: Job? = null
     private var ultimaBusquedaEjecutada: String = ""
+
+    init {
+        // Observamos en vivo la creación de servicios locales para actualizar la UI al instante
+        viewModelScope.launch {
+            repository.observarServiciosLocales().collect {
+                if (_seccionActiva.value == SeccionCoordinador.SERVICIOS) {
+                    cargarServicios()
+                }
+            }
+        }
+    }
 
     fun inicializar(sedeCoordinador: Sede) {
         if (!sedeInicializada) {

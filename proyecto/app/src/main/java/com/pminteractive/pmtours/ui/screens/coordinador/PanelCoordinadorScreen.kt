@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -26,6 +28,7 @@ import com.pminteractive.pmtours.model.operadores.Usuario
 import com.pminteractive.pmtours.model.servicio.EstadoServicio
 import com.pminteractive.pmtours.model.servicio.Servicio
 import com.pminteractive.pmtours.model.servicio.TipoServicio
+import com.pminteractive.pmtours.network.NetworkMonitor
 import com.pminteractive.pmtours.network.dto.GuiaDto
 import com.pminteractive.pmtours.network.dto.TransportistaDto
 import com.pminteractive.pmtours.ui.components.CoordinadorBottomBar
@@ -35,6 +38,7 @@ import com.pminteractive.pmtours.ui.navigation.Screen
 import com.pminteractive.pmtours.ui.theme.*
 import com.pminteractive.pmtours.viewmodel.CoordinadorViewModel
 import com.pminteractive.pmtours.viewmodel.SeccionCoordinador
+import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -67,6 +71,21 @@ fun PanelCoordinadorScreen(
 ) {
     LaunchedEffect(usuario?.sede) {
         viewModel.inicializar(usuario?.sede ?: Sede.SANTIAGO)
+    }
+
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        NetworkMonitor.inicializar(context)
+    }
+    val estaConectado by NetworkMonitor.estaConectado.collectAsState()
+    var estabaConectado by remember { mutableStateOf(estaConectado) }
+
+    LaunchedEffect(estaConectado) {
+        if (estaConectado && !estabaConectado) {
+            delay(400)
+            viewModel.recargarTodo()
+        }
+        estabaConectado = estaConectado
     }
 
     val sedeSeleccionada by viewModel.sedeSeleccionada.collectAsState()
@@ -189,7 +208,7 @@ fun PanelCoordinadorScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
         ) {
-            // 1. Encabezado limpio
+            // 1. Encabezado limpio + indicador offline
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -208,6 +227,26 @@ fun PanelCoordinadorScreen(
                             color = LinceTextSecondary,
                             fontSize = 13.sp
                         )
+                        if (!estaConectado) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(7.dp)
+                                        .clip(CircleShape)
+                                        .background(LincePending)
+                                )
+                                Text(
+                                    text = "Sin conexión · Datos locales",
+                                    color = LincePending,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
                     }
 
                     TextButton(onClick = { viewModel.recargarTodo() }) {

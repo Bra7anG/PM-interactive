@@ -7,12 +7,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.pminteractive.pmtours.repository.AppContainer
 import com.pminteractive.pmtours.ui.navigation.AppNavigation
 import com.pminteractive.pmtours.ui.theme.PMTOURSTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Inyectamos el contexto al arrancar para habilitar la persistencia
+        AppContainer.inicializar(this)
+
         setContent {
             PMTOURSTheme {
                 Surface(

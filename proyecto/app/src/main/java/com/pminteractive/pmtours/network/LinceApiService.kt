@@ -6,6 +6,10 @@ import retrofit2.http.Query
 
 interface LinceApiService {
 
+    // 0. Estado de salud del servidor y base de datos
+    @GET("health")
+    suspend fun getHealth(): HealthDto
+
     // 1. Catálogos maestros (oficinas, idiomas, tipos de servicio y estados)
     @GET("api/v1/catalogos")
     suspend fun getCatalogos(): ApiResponse<CatalogosDto>

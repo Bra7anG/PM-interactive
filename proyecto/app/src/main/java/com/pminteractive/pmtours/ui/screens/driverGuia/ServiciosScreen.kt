@@ -1,31 +1,35 @@
 /**
- * OBJETIVO DEL SCRIPT:
- * Pantalla principal de agenda y hoja de ruta de servicios para el operador (Driver o Guía).
+- OBJETIVO DEL SCRIPT:
+- Pantalla principal de agenda y hoja de ruta de servicios para el operador (Driver o Guía).
  *
- * RESUMEN:
- * Renderiza la lista de asignaciones operativas con buscador de texto libre (botón X para limpiar),
- * chips de filtrado por estado y un banner informativo dinámico cuando se consultan los servicios completados.
+- RESUMEN:
+- Renderiza la lista de asignaciones operativas con buscador de texto libre (botón X para limpiar),
+- chips de filtrado por estado y banners informativos dinámicos para servicios finalizados y cancelados.
  *
- * DETALLE:
- * - Filtro combinado en memoria: cruza texto libre (hotel, pasajero, reserva) con el estado seleccionado.
- * - Regla de visibilidad histórica: al activar el chip 'Finalizados', despliega un banner indicando
- *   el mes en curso y el total de servicios completados computados.
- * - Servicios pendientes y confirmados permanecen visibles sin restricción de fecha para evitar no-shows a fin de mes.
+- DETALLE:
+- - Filtro combinado en memoria: cruza texto libre (hotel, pasajero, reserva) con el estado seleccionado.
+- - Regla de visibilidad histórica: al activar el chip 'Finalizados', despliega un banner indicando
+-   el mes en curso y el total de servicios completados computados.
+- - Incluye filtro 'Cancelados' para auditar servicios anulados por operaciones o no-show con tarifa protegida.
  */
 package com.pminteractive.pmtours.ui.screens.driverGuia
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -35,18 +39,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pminteractive.pmtours.R
 import com.pminteractive.pmtours.model.servicio.EstadoServicio
 import com.pminteractive.pmtours.model.servicio.Servicio
+import com.pminteractive.pmtours.network.NetworkMonitor
 import com.pminteractive.pmtours.ui.components.OperadorBottomBar
 import com.pminteractive.pmtours.ui.components.ServicioCard
 import com.pminteractive.pmtours.ui.navigation.Screen
 import com.pminteractive.pmtours.ui.theme.*
 import com.pminteractive.pmtours.viewmodel.ServicioViewModel
+import kotlinx.coroutines.delay
 
 enum class FiltroEstadoServicio(val etiqueta: String, val estado: EstadoServicio?) {
     TODOS("Todos", null),
     PENDIENTES("Pendientes", EstadoServicio.ASIGNADO),
     CONFIRMADOS("Confirmados", EstadoServicio.CONFIRMADO),
     EN_RUTA("En ruta", EstadoServicio.EN_RUTA),
-    FINALIZADOS("Finalizados", EstadoServicio.FINALIZADO)
+    FINALIZADOS("Finalizados", EstadoServicio.FINALIZADO),
+    CANCELADOS("Cancelados", EstadoServicio.CANCELADO)
 }
 
 @Composable
@@ -60,6 +67,21 @@ fun ServiciosScreen(
     // Sincroniza la consulta con el usuario autenticado
     LaunchedEffect(usuarioId) {
         viewModel.cargarServiciosDelUsuario(usuarioId)
+    }
+
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        NetworkMonitor.inicializar(context)
+    }
+    val estaConectado by NetworkMonitor.estaConectado.collectAsState()
+    var estabaConectado by remember { mutableStateOf(estaConectado) }
+
+    LaunchedEffect(estaConectado) {
+        if (estaConectado && !estabaConectado) {
+            delay(400)
+            viewModel.cargarServiciosDelUsuario(usuarioId, forzarRecarga = true)
+        }
+        estabaConectado = estaConectado
     }
 
     val servicios by viewModel.servicios.collectAsState()
@@ -128,7 +150,7 @@ fun ServiciosScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 1. Cabecera con fecha y saludo
+            // 1. Cabecera con fecha, saludo e indicador offline
             Text(
                 text = fechaCabecera,
                 color = LinceTextSecondary,
@@ -142,6 +164,27 @@ fun ServiciosScreen(
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold
             )
+
+            if (!estaConectado) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(7.dp)
+                            .clip(CircleShape)
+                            .background(LincePending)
+                    )
+                    Text(
+                        text = "Sin conexión · Datos locales",
+                        color = LincePending,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(18.dp))
 
@@ -233,7 +276,7 @@ fun ServiciosScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // 4. Banner informativo al seleccionar "Finalizados"
+            // 4. Banner informativo al seleccionar "Finalizados" o "Cancelados"
             if (filtroSeleccionado == FiltroEstadoServicio.FINALIZADOS) {
                 Surface(
                     color = LinceSurface,
@@ -258,6 +301,36 @@ fun ServiciosScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = "Mostrando servicios finalizados de $nombreMesActual (${serviciosFiltrados.size} completados)",
+                            color = LinceTextSecondary,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            } else if (filtroSeleccionado == FiltroEstadoServicio.CANCELADOS) {
+                Surface(
+                    color = LinceSurface,
+                    shape = RoundedCornerShape(12.dp),
+                    border = CardDefaults.outlinedCardBorder().copy(
+                        brush = SolidColor(LinceSurfaceBorder)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_info),
+                            contentDescription = null,
+                            tint = LinceCancelled,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Servicios cancelados (${serviciosFiltrados.size} · tarifa resguardada según política)",
                             color = LinceTextSecondary,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium

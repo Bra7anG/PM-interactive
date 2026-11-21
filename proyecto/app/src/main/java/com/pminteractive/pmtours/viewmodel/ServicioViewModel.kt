@@ -70,16 +70,18 @@ class ServicioViewModel(
      * - Servicios activos/futuros: Siempre visibles (ASIGNADO, CONFIRMADO, EN_RUTA, CANCELADO).
      * - Servicios FINALIZADOS: Solo visibles si fueron ejecutados en el mes actual.
      */
-    fun cargarServiciosDelUsuario(trabajadorId: String) {
+    fun cargarServiciosDelUsuario(trabajadorId: String, forzarRecarga: Boolean = false) {
         if (trabajadorId.isBlank()) {
             limpiar()
             return
         }
-        if (trabajadorId == trabajadorActual) return
+        if (trabajadorId == trabajadorActual && !forzarRecarga) return
 
         trabajadorActual = trabajadorId
         jobObservador?.cancel()
-        _servicios.value = emptyList()
+        if (!forzarRecarga) {
+            _servicios.value = emptyList()
+        }
 
         jobObservador = coroutineScope.launch {
             repository.obtenerServiciosPorTrabajador(trabajadorId).collect { listaBruta ->
@@ -87,10 +89,8 @@ class ServicioViewModel(
 
                 val listaDepurada = listaBruta.filter { servicio ->
                     if (servicio.estado != EstadoServicio.FINALIZADO) {
-                        // Viajes pendientes, confirmados, en ruta o con cancelación protegida se mantienen visibles
                         true
                     } else {
-                        // Viajes finalizados solo se muestran si corresponden al mes en curso
                         try {
                             val fechaServicio = YearMonth.from(LocalDate.parse(servicio.fecha))
                             fechaServicio == mesActual
