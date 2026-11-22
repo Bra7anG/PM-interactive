@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 sealed interface AuthUiState {
     data object Inactivo : AuthUiState // Muestra el formulario
@@ -25,13 +26,17 @@ class AuthViewModel(
 
     private val coroutineScope: CoroutineScope = scope ?: viewModelScope
 
-    // LA SOLUCIÓN DEFINITIVA: Obligamos a que la app nazca 100% en estado CARGANDO.
+    // Obligamos a que la app nazca 100% en estado CARGANDO.
     // Compose dibujará el Splash Screen en el frame 0, sí o sí.
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Cargando)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
     init {
-        verificarSesionGuardada()
+        // Envolvemos la inicialización en una corrutina para forzar el delay artificial
+        coroutineScope.launch {
+            delay(1000) // 1 segundo (1000 ms) de espera para que se note el Splash
+            verificarSesionGuardada()
+        }
     }
 
     private fun verificarSesionGuardada() {

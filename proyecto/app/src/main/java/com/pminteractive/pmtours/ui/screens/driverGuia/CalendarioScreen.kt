@@ -1,16 +1,6 @@
 /**
  * OBJETIVO DEL SCRIPT:
  * Pantalla de gestión de agenda, turnos y bloqueo de disponibilidad para Driver o Guía.
- *
- * RESUMEN:
- * Renderiza un calendario mensual interactivo con gestos de deslizamiento, selector de día
- * con interruptor (Switch) para conmutar bloqueos y deselección automática al cambiar de mes.
- *
- * DETALLE:
- * - Detecta mediante 'LaunchedEffect' el cambio de mes visible y reinicia 'fechaSeleccionada' a null.
- * - Utiliza vectores nativos 'ic_touch' e 'ic_info' en lugar de emojis informales.
- * - Valida en tiempo real que no se bloqueen días con servicios asignados o con menos de 7 días de anticipación.
- * - Mantiene actualizada la lista inferior con los próximos días bloqueados confirmados.
  */
 package com.pminteractive.pmtours.ui.screens.driverGuia
 
@@ -76,9 +66,9 @@ fun CalendarioScreen(
         serviciosAsignados
             .filter {
                 it.estado == EstadoServicio.ASIGNADO ||
-                    it.estado == EstadoServicio.CONFIRMADO ||
-                    it.estado == EstadoServicio.EN_RUTA ||
-                    it.estado == EstadoServicio.FINALIZADO
+                        it.estado == EstadoServicio.CONFIRMADO ||
+                        it.estado == EstadoServicio.EN_RUTA ||
+                        it.estado == EstadoServicio.FINALIZADO
             }
             .map { it.fecha }
             .toSet()
@@ -177,12 +167,11 @@ fun CalendarioScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 2. Leyenda superior
+            // 2. Leyenda superior (Simplificada a 2 estados)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                LeyendaEstado(color = LincePrimary, texto = "Disponible")
                 LeyendaEstado(color = LinceService, texto = "Con servicio")
                 LeyendaEstado(color = LinceBlockedBorder, texto = "Bloqueado", conCandado = true)
             }
@@ -334,7 +323,6 @@ fun CalendarioScreen(
                         )
                     }
                 } else {
-                    // Estado vacío con ícono vectorial 'ic_touch'
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -523,15 +511,16 @@ private fun CeldaDiaCalendario(
                 )
             }
 
+            // Candado MEJORADO: Ahora es blanco (LinceTextPrimary) y más grande para destacar
             if (estaBloqueado && !tieneServicio) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_lock),
                     contentDescription = null,
-                    tint = LinceBlockedSoft,
+                    tint = LinceTextPrimary,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(2.dp)
-                        .size(9.dp)
+                        .size(12.dp)
                 )
             }
         }

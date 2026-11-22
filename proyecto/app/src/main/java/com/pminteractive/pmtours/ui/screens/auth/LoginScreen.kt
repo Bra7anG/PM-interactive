@@ -28,7 +28,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pminteractive.pmtours.R
 import com.pminteractive.pmtours.model.operadores.Usuario
 import com.pminteractive.pmtours.network.NetworkMonitor
@@ -51,7 +50,7 @@ private enum class EstadoApiLogin {
 @Composable
 fun LoginScreen(
     onLoginExitoso: (Usuario) -> Unit,
-    viewModel: AuthViewModel = viewModel()
+    viewModel: AuthViewModel // Ahora se recibe por parámetro desde AppNavigation
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -105,251 +104,217 @@ fun LoginScreen(
     Scaffold(
         containerColor = LinceBackground
     ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Spacer(modifier = Modifier.height(24.dp))
 
-        // =========================================================================
-        // SEPARACIÓN PURA: Si está cargando, dibuja el Splash. Si no, el Login.
-        // =========================================================================
-        if (uiState is AuthUiState.Cargando) {
-            // ------------------------------------------------
-            // PANTALLA DE CARGA (SPLASH SCREEN)
-            // ------------------------------------------------
-            Column(
+            // 1. Logo superior corporativo
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo Lince PM Tours",
+                contentScale = ContentScale.Fit,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "Logo Lince PM Tours",
-                    contentScale = ContentScale.Fit,
+                    .size(105.dp)
+                    .clip(CircleShape)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 2. Títulos corporativos
+            Text(
+                text = "PM TOURS",
+                color = LinceTextPrimary,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Servicios turísticos Southbound",
+                color = LinceTextSecondary,
+                fontSize = 14.sp
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            IndicadorSaludServidor(
+                estado = estadoApi,
+                onReintentar = { reintentoManual++ }
+            )
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // 3. Banner de error de credenciales
+            if (uiState is AuthUiState.Error) {
+                Surface(
+                    color = LinceErrorContainer,
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, LinceError),
                     modifier = Modifier
-                        .size(120.dp)
-                        .clip(CircleShape)
-                )
-                Spacer(modifier = Modifier.height(30.dp))
-                CircularProgressIndicator(
-                    color = LinceCyan,
-                    modifier = Modifier.size(40.dp)
-                )
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp)
+                        .testTag("login_error")
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "⚠",
+                            color = LinceError,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = (uiState as AuthUiState.Error).mensaje,
+                            color = LinceError,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
             }
-        } else {
-            // ------------------------------------------------
-            // PANTALLA DE LOGIN COMPLETA (FORMULARIO)
-            // ------------------------------------------------
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Spacer(modifier = Modifier.height(24.dp))
 
-                // 1. Logo superior corporativo
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "Logo Lince PM Tours",
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .size(105.dp)
-                        .clip(CircleShape)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // 2. Títulos corporativos
+            // 4. Campo Usuario
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "PM TOURS",
+                    text = "Usuario o Código",
                     color = LinceTextPrimary,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Servicios turísticos Southbound",
-                    color = LinceTextSecondary,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-
-                IndicadorSaludServidor(
-                    estado = estadoApi,
-                    onReintentar = { reintentoManual++ }
-                )
-
-                Spacer(modifier = Modifier.height(28.dp))
-
-                // 3. Banner de error de credenciales
-                if (uiState is AuthUiState.Error) {
-                    Surface(
-                        color = LinceErrorContainer,
-                        shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, LinceError),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 20.dp)
-                            .testTag("login_error")
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "⚠",
-                                color = LinceError,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                text = (uiState as AuthUiState.Error).mensaje,
-                                color = LinceError,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
-                }
-
-                // 4. Campo Usuario
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "Usuario o Código",
-                        color = LinceTextPrimary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = usuario,
-                        onValueChange = {
-                            usuario = it
-                            if (intentoEnvio) intentoEnvio = false
-                        },
-                        placeholder = {
-                            Text("Ej: driver, TRA-021 o usuario@pmtours.cl", color = LinceTextSecondary.copy(alpha = 0.6f))
-                        },
-                        singleLine = true,
-                        isError = usuarioInvalido,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next
-                        ),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = LinceSurface,
-                            unfocusedContainerColor = LinceSurface,
-                            errorContainerColor = LinceSurface,
-                            focusedTextColor = LinceTextPrimary,
-                            unfocusedTextColor = LinceTextPrimary,
-                            cursorColor = LinceCyan,
-                            focusedBorderColor = LinceCyan,
-                            unfocusedBorderColor = LinceSurfaceBorder,
-                            errorBorderColor = LinceError
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("login_correo")
-                    )
-                    if (usuarioInvalido) {
-                        Text(
-                            text = "Ingrese un usuario, código (TRA/GUI) o correo válido",
-                            color = LinceError,
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(top = 4.dp, start = 4.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // 5. Campo Contraseña
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "Contraseña",
-                        color = LinceTextPrimary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = contrasena,
-                        onValueChange = {
-                            contrasena = it
-                            if (intentoEnvio) intentoEnvio = false
-                        },
-                        placeholder = {
-                            Text("••••••••", color = LinceTextSecondary.copy(alpha = 0.6f))
-                        },
-                        singleLine = true,
-                        isError = contrasenaInvalida,
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = { focusManager.clearFocus() }
-                        ),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = LinceSurface,
-                            unfocusedContainerColor = LinceSurface,
-                            errorContainerColor = LinceSurface,
-                            focusedTextColor = LinceTextPrimary,
-                            unfocusedTextColor = LinceTextPrimary,
-                            cursorColor = LinceCyan,
-                            focusedBorderColor = LinceCyan,
-                            unfocusedBorderColor = LinceSurfaceBorder,
-                            errorBorderColor = LinceError
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("login_clave")
-                    )
-                    if (contrasenaInvalida) {
-                        Text(
-                            text = "Contraseña incorrecta",
-                            color = LinceError,
-                            fontSize = 12.sp,
-                            modifier = Modifier.padding(top = 4.dp, start = 4.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(28.dp))
-
-                // 6. Botón de Acción Principal
-                Button(
-                    onClick = {
-                        focusManager.clearFocus()
-                        intentoEnvio = true
-                        if (!usuarioInvalido && !contrasenaInvalida && entradaLimpia.isNotBlank() && contrasena.isNotBlank()) {
-                            viewModel.iniciarSesion(entradaLimpia, contrasena)
-                        }
+                OutlinedTextField(
+                    value = usuario,
+                    onValueChange = {
+                        usuario = it
+                        if (intentoEnvio) intentoEnvio = false
                     },
+                    placeholder = {
+                        Text("Ej: driver, TRA-021 o usuario@pmtours.cl", color = LinceTextSecondary.copy(alpha = 0.6f))
+                    },
+                    singleLine = true,
+                    isError = usuarioInvalido,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next
+                    ),
                     shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = LinceCyan,
-                        contentColor = Color.White
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = LinceSurface,
+                        unfocusedContainerColor = LinceSurface,
+                        errorContainerColor = LinceSurface,
+                        focusedTextColor = LinceTextPrimary,
+                        unfocusedTextColor = LinceTextPrimary,
+                        cursorColor = LinceCyan,
+                        focusedBorderColor = LinceCyan,
+                        unfocusedBorderColor = LinceSurfaceBorder,
+                        errorBorderColor = LinceError
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp)
-                        .testTag("login_btn")
-                ) {
+                        .testTag("login_correo")
+                )
+                if (usuarioInvalido) {
                     Text(
-                        text = "Ingresar",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                        text = "Ingrese un usuario, código (TRA/GUI) o correo válido",
+                        color = LinceError,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 4.dp, start = 4.dp)
                     )
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // 5. Campo Contraseña
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Contraseña",
+                    color = LinceTextPrimary,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = contrasena,
+                    onValueChange = {
+                        contrasena = it
+                        if (intentoEnvio) intentoEnvio = false
+                    },
+                    placeholder = {
+                        Text("••••••••", color = LinceTextSecondary.copy(alpha = 0.6f))
+                    },
+                    singleLine = true,
+                    isError = contrasenaInvalida,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { focusManager.clearFocus() }
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = LinceSurface,
+                        unfocusedContainerColor = LinceSurface,
+                        errorContainerColor = LinceSurface,
+                        focusedTextColor = LinceTextPrimary,
+                        unfocusedTextColor = LinceTextPrimary,
+                        cursorColor = LinceCyan,
+                        focusedBorderColor = LinceCyan,
+                        unfocusedBorderColor = LinceSurfaceBorder,
+                        errorBorderColor = LinceError
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("login_clave")
+                )
+                if (contrasenaInvalida) {
+                    Text(
+                        text = "Contraseña incorrecta",
+                        color = LinceError,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // 6. Botón de Acción Principal
+            Button(
+                onClick = {
+                    focusManager.clearFocus()
+                    intentoEnvio = true
+                    if (!usuarioInvalido && !contrasenaInvalida && entradaLimpia.isNotBlank() && contrasena.isNotBlank()) {
+                        viewModel.iniciarSesion(entradaLimpia, contrasena)
+                    }
+                },
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = LinceCyan,
+                    contentColor = Color.White
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .testTag("login_btn")
+            ) {
+                Text(
+                    text = "Ingresar",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
