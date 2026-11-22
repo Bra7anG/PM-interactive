@@ -7,10 +7,12 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset // IMPORT CO
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource // <-- IMPORT AÑADIDO
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pminteractive.pmtours.R
 import com.pminteractive.pmtours.model.datosoperativos.RolUsuario
 import com.pminteractive.pmtours.model.datosoperativos.Sede
 import com.pminteractive.pmtours.model.operadores.Usuario
@@ -58,14 +60,14 @@ fun CrearAdminScreen(
                 Tab(
                     selected = tabSeleccionada == 0,
                     onClick = { tabSeleccionada = 0 },
-                    text = { Text("Crear Servicio", fontWeight = FontWeight.Bold) },
+                    text = { Text(stringResource(id = R.string.admin_tab_servicio), fontWeight = FontWeight.Bold) },
                     selectedContentColor = LinceCyan,
                     unselectedContentColor = LinceTextSecondary
                 )
                 Tab(
                     selected = tabSeleccionada == 1,
                     onClick = { tabSeleccionada = 1 },
-                    text = { Text("Crear Usuario", fontWeight = FontWeight.Bold) },
+                    text = { Text(stringResource(id = R.string.admin_tab_usuario), fontWeight = FontWeight.Bold) },
                     selectedContentColor = LinceCyan,
                     unselectedContentColor = LinceTextSecondary
                 )
@@ -109,6 +111,9 @@ private fun FormularioUsuarioLocalAdmin(
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val errorGeneral = stringResource(id = R.string.admin_form_error_general)
+    val errorNombre = stringResource(id = R.string.admin_form_error_nombre)
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color.Transparent
@@ -121,14 +126,14 @@ private fun FormularioUsuarioLocalAdmin(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Nueva Cuenta Local",
+                text = stringResource(id = R.string.admin_form_titulo),
                 color = LinceTextPrimary,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
 
             Text(
-                text = "Los usuarios creados aquí solo existirán en la memoria de este dispositivo (sin sincronización con el servidor Lince).",
+                text = stringResource(id = R.string.admin_form_desc),
                 color = LinceTextSecondary,
                 fontSize = 13.sp
             )
@@ -136,7 +141,7 @@ private fun FormularioUsuarioLocalAdmin(
             OutlinedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
-                label = { Text("Nombre Completo") },
+                label = { Text(stringResource(id = R.string.admin_form_nombre)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
@@ -145,7 +150,7 @@ private fun FormularioUsuarioLocalAdmin(
                 )
             )
 
-            Text("Rol Operativo", color = LinceTextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(id = R.string.admin_form_rol), color = LinceTextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(RolUsuario.DRIVER, RolUsuario.GUIA, RolUsuario.COORDINADOR).forEach { rol ->
                     FilterChip(
@@ -160,7 +165,7 @@ private fun FormularioUsuarioLocalAdmin(
                 }
             }
 
-            Text("Sede Base", color = LinceTextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(id = R.string.admin_form_sede), color = LinceTextSecondary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Sede.values().filter { it.codigo != "ALL" }.forEach { sede ->
                     FilterChip(
@@ -185,12 +190,12 @@ private fun FormularioUsuarioLocalAdmin(
                             if (resultado.isSuccess) {
                                 onUsuarioCreado()
                             } else {
-                                snackbarHostState.showSnackbar(resultado.exceptionOrNull()?.message ?: "Error al crear usuario")
+                                snackbarHostState.showSnackbar(resultado.exceptionOrNull()?.message ?: errorGeneral)
                             }
                         }
                     } else {
                         coroutineScope.launch {
-                            snackbarHostState.showSnackbar("El nombre es obligatorio")
+                            snackbarHostState.showSnackbar(errorNombre)
                         }
                     }
                 },
@@ -198,7 +203,7 @@ private fun FormularioUsuarioLocalAdmin(
                 colors = ButtonDefaults.buttonColors(containerColor = LinceCyan),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Registrar Usuario Local", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(id = R.string.admin_form_btn_registrar), fontSize = 15.sp, fontWeight = FontWeight.Bold)
             }
         }
     }

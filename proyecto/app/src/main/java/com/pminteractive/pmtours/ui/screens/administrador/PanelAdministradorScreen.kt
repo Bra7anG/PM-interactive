@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource // <-- IMPORT AÑADIDO
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -58,23 +59,30 @@ fun PanelAdministradorScreen(
 
     val context = LocalContext.current
 
+    val fallbackFecha = stringResource(id = R.string.admin_panel_fecha_fallback)
     val fechaCabecera = remember {
         try {
             val hoy = LocalDate.now()
-            val formato = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM", Locale("es", "CL"))
+            // Locale.getDefault() para adaptar "Monday" / "Lunes"
+            val formato = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM", Locale.getDefault())
             hoy.format(formato).replaceFirstChar { it.uppercase() }
         } catch (e: Exception) {
-            "Hoy"
+            fallbackFecha
         }
     }
 
-    // Preparamos las opciones para los menús desplegables
-    val opcionesRol = remember(resumen) {
+    // Traducimos las etiquetas de los filtros
+    val lblTodos = stringResource(id = R.string.admin_filtro_roles_todos)
+    val lblDrivers = stringResource(id = R.string.admin_filtro_roles_drivers, resumen.drivers)
+    val lblGuias = stringResource(id = R.string.admin_filtro_roles_guias, resumen.guias)
+    val lblStaff = stringResource(id = R.string.admin_filtro_roles_staff, resumen.coordinadores)
+
+    val opcionesRol = remember(resumen, lblTodos, lblDrivers, lblGuias, lblStaff) {
         listOf(
-            OpcionFiltroRol("Todos los roles", null),
-            OpcionFiltroRol("Drivers (${resumen.drivers})", RolUsuario.DRIVER),
-            OpcionFiltroRol("Guías (${resumen.guias})", RolUsuario.GUIA),
-            OpcionFiltroRol("Staff (${resumen.coordinadores})", RolUsuario.COORDINADOR)
+            OpcionFiltroRol(lblTodos, null),
+            OpcionFiltroRol(lblDrivers, RolUsuario.DRIVER),
+            OpcionFiltroRol(lblGuias, RolUsuario.GUIA),
+            OpcionFiltroRol(lblStaff, RolUsuario.COORDINADOR)
         )
     }
 
@@ -83,7 +91,11 @@ fun PanelAdministradorScreen(
     val opcionesSede = remember {
         listOf(null) + Sede.values().filter { it.codigo != "ALL" }
     }
-    val etiquetaSedeActual = filtroSede?.nombreCiudad ?: "Todas las sedes"
+
+    val lblTodasSedes = stringResource(id = R.string.admin_filtro_sedes_todas)
+    val etiquetaSedeActual = filtroSede?.nombreCiudad ?: lblTodasSedes
+
+    val textoCompartir = stringResource(id = R.string.admin_panel_compartir)
 
     Scaffold(
         containerColor = LinceBackground,
@@ -117,7 +129,7 @@ fun PanelAdministradorScreen(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Personal Operativo",
+                        text = stringResource(id = R.string.admin_panel_titulo),
                         color = LinceTextPrimary,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
@@ -133,7 +145,7 @@ fun PanelAdministradorScreen(
                                 putExtra(Intent.EXTRA_STREAM, uri)
                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             }
-                            context.startActivity(Intent.createChooser(intent, "Compartir Reporte"))
+                            context.startActivity(Intent.createChooser(intent, textoCompartir))
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = LinceCyan),
@@ -143,7 +155,7 @@ fun PanelAdministradorScreen(
                 ) {
                     Icon(painterResource(id = R.drawable.ic_info), contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Reporte", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = LinceBackground)
+                    Text(stringResource(id = R.string.admin_panel_btn_reporte), fontSize = 13.sp, fontWeight = FontWeight.Bold, color = LinceBackground)
                 }
             }
 
@@ -166,7 +178,7 @@ fun PanelAdministradorScreen(
                 SelectorCompactoDropdown(
                     etiquetaActual = etiquetaSedeActual,
                     opciones = opcionesSede,
-                    obtenerTexto = { it?.nombreCiudad ?: "Todas las sedes" },
+                    obtenerTexto = { it?.nombreCiudad ?: lblTodasSedes },
                     onSeleccionar = { viewModel.setFiltroSede(it) },
                     destacar = filtroSede != null, // Se ilumina si hay una sede específica seleccionada
                     modifier = Modifier.weight(1f)
@@ -313,9 +325,11 @@ private fun FilaCuenta(cuenta: Usuario) {
     }
 }
 
+// Convertido a @Composable para permitir el uso de stringResource
+@Composable
 private fun estiloRol(rol: RolUsuario): Triple<Color, Color, String> = when (rol) {
-    RolUsuario.ADMINISTRADOR -> Triple(LinceRoleAdminSoft, LinceRoleAdmin, "Admin")
-    RolUsuario.COORDINADOR -> Triple(LinceRoleCoordinatorSoft, LinceRoleCoordinator, "Coordinador")
-    RolUsuario.DRIVER -> Triple(LinceRoleDriverSoft, LinceRoleDriver, "Driver")
-    RolUsuario.GUIA -> Triple(LinceRoleGuideSoft, LinceRoleGuide, "Guía")
+    RolUsuario.ADMINISTRADOR -> Triple(LinceRoleAdminSoft, LinceRoleAdmin, stringResource(id = R.string.admin_badge_admin))
+    RolUsuario.COORDINADOR -> Triple(LinceRoleCoordinatorSoft, LinceRoleCoordinator, stringResource(id = R.string.admin_badge_coord))
+    RolUsuario.DRIVER -> Triple(LinceRoleDriverSoft, LinceRoleDriver, stringResource(id = R.string.admin_badge_driver))
+    RolUsuario.GUIA -> Triple(LinceRoleGuideSoft, LinceRoleGuide, stringResource(id = R.string.admin_badge_guia))
 }

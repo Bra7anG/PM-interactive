@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource // <-- IMPORT VITAL
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -32,6 +33,7 @@ import com.pminteractive.pmtours.R
 import com.pminteractive.pmtours.model.operadores.Usuario
 import com.pminteractive.pmtours.network.NetworkMonitor
 import com.pminteractive.pmtours.repository.AppContainer
+import com.pminteractive.pmtours.ui.components.SelectorIdioma // <-- Agregamos el selector aquí también si quieres (opcional)
 import com.pminteractive.pmtours.ui.theme.*
 import com.pminteractive.pmtours.viewmodel.AuthUiState
 import com.pminteractive.pmtours.viewmodel.AuthViewModel
@@ -50,7 +52,7 @@ private enum class EstadoApiLogin {
 @Composable
 fun LoginScreen(
     onLoginExitoso: (Usuario) -> Unit,
-    viewModel: AuthViewModel // Ahora se recibe por parámetro desde AppNavigation
+    viewModel: AuthViewModel
 ) {
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -128,14 +130,14 @@ fun LoginScreen(
 
             // 2. Títulos corporativos
             Text(
-                text = "PM TOURS",
+                text = stringResource(id = R.string.app_name), // Lee "PM TOURS" desde XML
                 color = LinceTextPrimary,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Servicios turísticos Southbound",
+                text = stringResource(id = R.string.login_subtitulo), // Lee "Servicios turísticos Southbound" o su versión EN
                 color = LinceTextSecondary,
                 fontSize = 14.sp
             )
@@ -171,7 +173,10 @@ fun LoginScreen(
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = (uiState as AuthUiState.Error).mensaje,
+                            // ==========================================
+                            // AQUÍ ESTÁ EL ARREGLO PRINCIPAL DEL ERROR
+                            // ==========================================
+                            text = stringResource(id = (uiState as AuthUiState.Error).mensajeResId),
                             color = LinceError,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium
@@ -183,7 +188,7 @@ fun LoginScreen(
             // 4. Campo Usuario
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Usuario o Código",
+                    text = stringResource(id = R.string.login_label_usuario),
                     color = LinceTextPrimary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold
@@ -196,7 +201,7 @@ fun LoginScreen(
                         if (intentoEnvio) intentoEnvio = false
                     },
                     placeholder = {
-                        Text("Ej: driver, TRA-021 o usuario@pmtours.cl", color = LinceTextSecondary.copy(alpha = 0.6f))
+                        Text(stringResource(id = R.string.login_hint_usuario), color = LinceTextSecondary.copy(alpha = 0.6f))
                     },
                     singleLine = true,
                     isError = usuarioInvalido,
@@ -222,7 +227,7 @@ fun LoginScreen(
                 )
                 if (usuarioInvalido) {
                     Text(
-                        text = "Ingrese un usuario, código (TRA/GUI) o correo válido",
+                        text = stringResource(id = R.string.login_error_usuario),
                         color = LinceError,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(top = 4.dp, start = 4.dp)
@@ -235,7 +240,7 @@ fun LoginScreen(
             // 5. Campo Contraseña
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Contraseña",
+                    text = stringResource(id = R.string.login_label_clave),
                     color = LinceTextPrimary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold
@@ -248,7 +253,7 @@ fun LoginScreen(
                         if (intentoEnvio) intentoEnvio = false
                     },
                     placeholder = {
-                        Text("••••••••", color = LinceTextSecondary.copy(alpha = 0.6f))
+                        Text(stringResource(id = R.string.login_hint_clave), color = LinceTextSecondary.copy(alpha = 0.6f))
                     },
                     singleLine = true,
                     isError = contrasenaInvalida,
@@ -278,7 +283,7 @@ fun LoginScreen(
                 )
                 if (contrasenaInvalida) {
                     Text(
-                        text = "Contraseña incorrecta",
+                        text = stringResource(id = R.string.login_error_clave),
                         color = LinceError,
                         fontSize = 12.sp,
                         modifier = Modifier.padding(top = 4.dp, start = 4.dp)
@@ -308,11 +313,16 @@ fun LoginScreen(
                     .testTag("login_btn")
             ) {
                 Text(
-                    text = "Ingresar",
+                    text = stringResource(id = R.string.login_boton_ingresar),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
+
+            Spacer(modifier = Modifier.height(30.dp))
+
+            // 7. Selector de idioma directamente en el Login (opcional, pero buena práctica)
+            SelectorIdioma()
 
             Spacer(modifier = Modifier.height(24.dp))
         }
@@ -324,11 +334,19 @@ private fun IndicadorSaludServidor(
     estado: EstadoApiLogin,
     onReintentar: () -> Unit
 ) {
-    val (colorPunto, texto) = when (estado) {
-        EstadoApiLogin.VERIFICANDO -> LinceTextSecondary to "Verificando servidor..."
-        EstadoApiLogin.EN_LINEA -> LinceSuccess to "Servidor en línea"
-        EstadoApiLogin.SIN_INTERNET -> LincePending to "Sin internet · Datos locales"
-        EstadoApiLogin.API_NO_DISPONIBLE -> LinceDanger to "Servidor no disponible · Modo respaldo"
+    // Leemos los strings nativos con una función para Compose
+    val textoStr = when (estado) {
+        EstadoApiLogin.VERIFICANDO -> stringResource(id = R.string.login_estado_verificando)
+        EstadoApiLogin.EN_LINEA -> stringResource(id = R.string.login_estado_en_linea)
+        EstadoApiLogin.SIN_INTERNET -> stringResource(id = R.string.login_estado_sin_internet)
+        EstadoApiLogin.API_NO_DISPONIBLE -> stringResource(id = R.string.login_estado_caido)
+    }
+
+    val colorPunto = when (estado) {
+        EstadoApiLogin.VERIFICANDO -> LinceTextSecondary
+        EstadoApiLogin.EN_LINEA -> LinceSuccess
+        EstadoApiLogin.SIN_INTERNET -> LincePending
+        EstadoApiLogin.API_NO_DISPONIBLE -> LinceDanger
     }
 
     Row(
@@ -346,7 +364,7 @@ private fun IndicadorSaludServidor(
                 .background(colorPunto)
         )
         Text(
-            text = texto,
+            text = textoStr,
             color = colorPunto,
             fontSize = 11.sp,
             fontWeight = FontWeight.Medium

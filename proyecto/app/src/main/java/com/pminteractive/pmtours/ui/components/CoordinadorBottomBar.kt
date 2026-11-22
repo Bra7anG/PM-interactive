@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource // <-- IMPORT AÑADIDO
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pminteractive.pmtours.R
@@ -24,6 +25,11 @@ fun CoordinadorBottomBar(
     rutaActual: String,
     onNavegar: (String) -> Unit
 ) {
+    val txtInicio = stringResource(id = R.string.nav_coord_inicio)
+    val txtCrearDesc = stringResource(id = R.string.nav_coord_crear_desc)
+    val txtCrear = stringResource(id = R.string.nav_coord_crear)
+    val txtPerfil = stringResource(id = R.string.nav_coord_perfil)
+
     NavigationBar(
         containerColor = LinceBackground,
         tonalElevation = 8.dp
@@ -40,11 +46,11 @@ fun CoordinadorBottomBar(
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_home),
-                    contentDescription = "Inicio",
+                    contentDescription = txtInicio,
                     modifier = Modifier.size(24.dp)
                 )
             },
-            label = { Text("Inicio", fontSize = 11.sp) },
+            label = { Text(txtInicio, fontSize = 11.sp) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = LinceCyan,
                 selectedTextColor = LinceCyan,
@@ -66,11 +72,11 @@ fun CoordinadorBottomBar(
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_add),
-                    contentDescription = "Crear servicio",
+                    contentDescription = txtCrearDesc,
                     modifier = Modifier.size(24.dp)
                 )
             },
-            label = { Text("Crear", fontSize = 11.sp) },
+            label = { Text(txtCrear, fontSize = 11.sp) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = LinceCyan,
                 selectedTextColor = LinceCyan,
@@ -92,11 +98,11 @@ fun CoordinadorBottomBar(
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_person),
-                    contentDescription = "Perfil",
+                    contentDescription = txtPerfil,
                     modifier = Modifier.size(24.dp)
                 )
             },
-            label = { Text("Perfil", fontSize = 11.sp) },
+            label = { Text(txtPerfil, fontSize = 11.sp) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = LinceCyan,
                 selectedTextColor = LinceCyan,

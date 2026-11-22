@@ -8,15 +8,61 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.pminteractive.pmtours.R
 import com.pminteractive.pmtours.model.servicio.EstadoServicio
 import com.pminteractive.pmtours.model.servicio.Servicio
 import com.pminteractive.pmtours.model.servicio.TipoServicio
 import com.pminteractive.pmtours.ui.theme.*
+
+// 1. Data class interna para empaquetar el diseño
+data class EstiloBadge(
+    val fondo: Color,
+    val texto: Color,
+    val etiquetaResId: Int
+)
+
+// 2. Función interna usando TUS colores reales (creando la versión "soft" con alpha)
+private fun obtenerEstiloVisual(estado: EstadoServicio): EstiloBadge {
+    return when (estado) {
+        EstadoServicio.ASIGNADO -> EstiloBadge(
+            fondo = LincePending.copy(alpha = 0.1f),
+            texto = LincePending,
+            etiquetaResId = R.string.estado_asignado
+        )
+        EstadoServicio.CONFIRMADO -> EstiloBadge(
+            fondo = LinceCyan.copy(alpha = 0.1f),
+            texto = LinceCyan,
+            etiquetaResId = R.string.estado_confirmado
+        )
+        EstadoServicio.RECHAZADO -> EstiloBadge(
+            fondo = LinceError.copy(alpha = 0.1f),
+            texto = LinceError,
+            etiquetaResId = R.string.estado_rechazado
+        )
+        EstadoServicio.EN_RUTA -> EstiloBadge(
+            fondo = LinceServiceSoft, // Este sí existía en tu código de Calendario
+            texto = LinceService,     // Este también
+            etiquetaResId = R.string.estado_en_ruta
+        )
+        EstadoServicio.FINALIZADO -> EstiloBadge(
+            fondo = LinceFinishedSurface, // Este lo vi en DetalleServicioScreen
+            texto = LinceTextSecondary,   // Usamos texto secundario como borde/texto
+            etiquetaResId = R.string.estado_finalizado
+        )
+        EstadoServicio.CANCELADO -> EstiloBadge(
+            fondo = LinceCancelled.copy(alpha = 0.1f),
+            texto = LinceCancelled,
+            etiquetaResId = R.string.estado_cancelado
+        )
+    }
+}
 
 @Composable
 fun EstadoServicioBadge(
@@ -24,7 +70,7 @@ fun EstadoServicioBadge(
     modifier: Modifier = Modifier,
     tagId: String? = null
 ) {
-    val estilo = estado.estiloVisual()
+    val estilo = obtenerEstiloVisual(estado)
 
     Surface(
         color = estilo.fondo,
@@ -33,7 +79,7 @@ fun EstadoServicioBadge(
         modifier = modifier
     ) {
         Text(
-            text = estilo.etiqueta,
+            text = stringResource(id = estilo.etiquetaResId),
             modifier = Modifier
                 .padding(horizontal = 10.dp, vertical = 4.dp)
                 .then(if (tagId != null) Modifier.testTag("servicio_estado_$tagId") else Modifier),
@@ -51,22 +97,25 @@ fun ServicioCard(
     modifier: Modifier = Modifier
 ) {
     val etiquetaTipo = when (servicio.tipo) {
-        TipoServicio.TRANSFER -> "TRANSFER"
-        TipoServicio.GUIDED_SERVICE -> "SERVICIO GUIADO"
-        TipoServicio.EXCURSION -> "EXCURSIÓN"
+        TipoServicio.TRANSFER -> stringResource(id = R.string.servicio_tipo_transfer)
+        TipoServicio.GUIDED_SERVICE -> stringResource(id = R.string.servicio_tipo_guiado)
+        TipoServicio.EXCURSION -> stringResource(id = R.string.servicio_tipo_excursion)
     }
 
+    val paxFormat = stringResource(id = R.string.servicio_pax_abreviado, "")
     val subtituloRuta = buildString {
         val origen = servicio.lugarPickup.substringBefore(",").trim()
         val destino = servicio.lugarDropOff.substringBefore(",").trim()
+
         if (origen.isNotBlank() && destino.isNotBlank()) {
             append("$origen → $destino")
         } else if (origen.isNotBlank()) {
             append(origen)
         }
+
         if (servicio.paxTexto.isNotBlank()) {
             if (isNotEmpty()) append(" · ")
-            append("${servicio.paxTexto} pax")
+            append(paxFormat.replace("", servicio.paxTexto).trim())
         }
     }
 

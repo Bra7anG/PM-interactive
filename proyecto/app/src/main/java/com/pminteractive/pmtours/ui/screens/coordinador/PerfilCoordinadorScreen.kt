@@ -13,12 +13,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource // <-- IMPORT AÑADIDO
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pminteractive.pmtours.R
 import com.pminteractive.pmtours.model.operadores.Usuario
 import com.pminteractive.pmtours.ui.components.CoordinadorBottomBar
+import com.pminteractive.pmtours.ui.components.SelectorIdioma
 import com.pminteractive.pmtours.ui.navigation.Screen
 import com.pminteractive.pmtours.ui.theme.*
 import com.pminteractive.pmtours.viewmodel.CoordinadorViewModel
@@ -37,6 +40,7 @@ fun PerfilCoordinadorScreen(
 
     val sedeBase = usuario?.sede?.nombreCiudad ?: "Santiago"
     val codigoSede = usuario?.sede?.codigo ?: "SCL"
+    val idUsuarioFallback = stringResource(id = R.string.coord_perfil_id_fallback)
 
     Scaffold(
         containerColor = LinceBackground,
@@ -79,18 +83,18 @@ fun PerfilCoordinadorScreen(
 
                 Column {
                     Text(
-                        text = usuario?.nombreCompleto ?: "Coordinador",
+                        text = usuario?.nombreCompleto ?: stringResource(id = R.string.coord_perfil_nombre_fallback),
                         color = LinceTextPrimary,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Coordinador de Operaciones · Base $sedeBase",
+                        text = stringResource(id = R.string.coord_perfil_rol_base, sedeBase),
                         color = LinceTextSecondary,
                         fontSize = 13.sp
                     )
                     Text(
-                        text = "ID: ${usuario?.id ?: "CRD-201"}",
+                        text = stringResource(id = R.string.coord_perfil_id, usuario?.id ?: idUsuarioFallback),
                         color = LinceCyan,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold
@@ -114,27 +118,27 @@ fun PerfilCoordinadorScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(
-                        text = "Alcance operativo",
+                        text = stringResource(id = R.string.coord_perfil_alcance_titulo),
                         color = LinceCyan,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
 
                     FilaPerfilInfo(
-                        etiqueta = "Sede principal",
-                        valor = "$sedeBase ($codigoSede)"
+                        etiqueta = stringResource(id = R.string.coord_perfil_alcance_sede),
+                        valor = stringResource(id = R.string.coord_perfil_alcance_sede_valor, sedeBase, codigoSede)
                     )
                     FilaPerfilInfo(
-                        etiqueta = "Cobertura de red",
-                        valor = "Santiago, Puerto Varas y Punta Arenas"
+                        etiqueta = stringResource(id = R.string.coord_perfil_alcance_cobertura_titulo),
+                        valor = stringResource(id = R.string.coord_perfil_alcance_cobertura_valor)
                     )
                     FilaPerfilInfo(
-                        etiqueta = "Atribuciones del rol",
-                        valor = "Creación y asignación de servicios, supervisión de flota/guías y cancelación operativa"
+                        etiqueta = stringResource(id = R.string.coord_perfil_alcance_rol_titulo),
+                        valor = stringResource(id = R.string.coord_perfil_alcance_rol_valor)
                     )
                     FilaPerfilInfo(
-                        etiqueta = "Sincronización",
-                        valor = "Conectado a Lince API · Southbound"
+                        etiqueta = stringResource(id = R.string.coord_perfil_alcance_sync_titulo),
+                        valor = stringResource(id = R.string.coord_perfil_alcance_sync_valor)
                     )
                 }
             }
@@ -155,27 +159,34 @@ fun PerfilCoordinadorScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Contacto institucional",
+                        text = stringResource(id = R.string.coord_perfil_contacto_titulo),
                         color = LinceCyan,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )
                     FilaPerfilInfo(
-                        etiqueta = "Correo",
+                        etiqueta = stringResource(id = R.string.coord_perfil_contacto_correo),
                         valor = usuario?.correo ?: "luis.figueroa@pmtours.cl"
                     )
                     FilaPerfilInfo(
-                        etiqueta = "Teléfono",
+                        etiqueta = stringResource(id = R.string.coord_perfil_contacto_telefono),
                         valor = usuario?.telefono ?: "+56999881122"
                     )
                     FilaPerfilInfo(
-                        etiqueta = "Oficina",
+                        etiqueta = stringResource(id = R.string.coord_perfil_contacto_oficina),
                         valor = usuario?.direccion ?: "Moneda 920, Santiago Centro"
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(28.dp))
+
+            // ==========================================
+            // COMPONENTE DE SELECCIÓN DE IDIOMA
+            // ==========================================
+            SelectorIdioma()
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             OutlinedButton(
                 onClick = onCerrarSesion,
@@ -189,7 +200,7 @@ fun PerfilCoordinadorScreen(
                     .height(50.dp)
             ) {
                 Text(
-                    text = "Cerrar Sesión Institucional",
+                    text = stringResource(id = R.string.btn_cerrar_sesion), // Traducción general que ya existía
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
                 )

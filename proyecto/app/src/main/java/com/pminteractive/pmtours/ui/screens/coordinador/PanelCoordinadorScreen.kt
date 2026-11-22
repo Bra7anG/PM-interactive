@@ -18,11 +18,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource // <-- IMPORT AÑADIDO
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pminteractive.pmtours.R
 import com.pminteractive.pmtours.model.datosoperativos.Sede
 import com.pminteractive.pmtours.model.operadores.Usuario
 import com.pminteractive.pmtours.model.servicio.EstadoServicio
@@ -47,19 +49,21 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private enum class FiltroEstadoLocal(val etiqueta: String, val estado: EstadoServicio?) {
-    TODOS("Todos", null),
-    PENDIENTES("Pendientes", EstadoServicio.ASIGNADO),
-    CONFIRMADOS("Confirmados", EstadoServicio.CONFIRMADO),
-    RECHAZADOS("Rechazados", EstadoServicio.RECHAZADO),
-    CANCELADOS("Cancelados", EstadoServicio.CANCELADO),
-    EN_RUTA("En ruta", EstadoServicio.EN_RUTA),
-    FINALIZADOS("Finalizados", EstadoServicio.FINALIZADO)
+// CAMBIO A INT PARA SOPORTAR I18N
+private enum class FiltroEstadoLocal(val etiquetaResId: Int, val estado: EstadoServicio?) {
+    TODOS(R.string.coord_filtro_estado_todos, null),
+    PENDIENTES(R.string.coord_filtro_estado_pendientes, EstadoServicio.ASIGNADO),
+    CONFIRMADOS(R.string.coord_filtro_estado_confirmados, EstadoServicio.CONFIRMADO),
+    RECHAZADOS(R.string.coord_filtro_estado_rechazados, EstadoServicio.RECHAZADO),
+    CANCELADOS(R.string.coord_filtro_estado_cancelados, EstadoServicio.CANCELADO),
+    EN_RUTA(R.string.coord_filtro_estado_en_ruta, EstadoServicio.EN_RUTA),
+    FINALIZADOS(R.string.coord_filtro_estado_finalizados, EstadoServicio.FINALIZADO)
 }
 
-private enum class OrdenPersonal(val etiqueta: String) {
-    EVALUACION("★ Mejor evaluación"),
-    NOMBRE("Nombre (A-Z)")
+// CAMBIO A INT PARA SOPORTAR I18N
+private enum class OrdenPersonal(val etiquetaResId: Int) {
+    EVALUACION(R.string.coord_orden_evaluacion),
+    NOMBRE(R.string.coord_orden_nombre)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -153,12 +157,12 @@ fun PanelCoordinadorScreen(
                     }
                     mostrarDatePicker = false
                 }) {
-                    Text("Aceptar", color = LinceCyan, fontWeight = FontWeight.Bold)
+                    Text(stringResource(id = R.string.crear_btn_aceptar), color = LinceCyan, fontWeight = FontWeight.Bold) // Reciclando string de Crear
                 }
             },
             dismissButton = {
                 TextButton(onClick = { mostrarDatePicker = false }) {
-                    Text("Cancelar", color = LinceTextSecondary)
+                    Text(stringResource(id = R.string.crear_btn_cancelar), color = LinceTextSecondary) // Reciclando string de Crear
                 }
             },
             colors = DatePickerDefaults.colors(containerColor = LinceSurface)
@@ -226,13 +230,13 @@ fun PanelCoordinadorScreen(
                 ) {
                     Column {
                         Text(
-                            text = if(esModoAdmin) "Servicios Operativos" else "Coordinación",
+                            text = if(esModoAdmin) stringResource(id = R.string.coord_panel_titulo_admin) else stringResource(id = R.string.coord_panel_titulo_coord),
                             color = LinceTextPrimary,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = usuario?.nombreCompleto ?: "Operaciones PM Tours",
+                            text = usuario?.nombreCompleto ?: stringResource(id = R.string.coord_panel_usuario_fallback),
                             color = LinceTextSecondary,
                             fontSize = 13.sp
                         )
@@ -249,7 +253,7 @@ fun PanelCoordinadorScreen(
                                         .background(LincePending)
                                 )
                                 Text(
-                                    text = "Sin conexión · Datos locales",
+                                    text = stringResource(id = R.string.coord_panel_sin_conexion),
                                     color = LincePending,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium
@@ -260,7 +264,7 @@ fun PanelCoordinadorScreen(
 
                     TextButton(onClick = { viewModel.recargarTodo() }) {
                         Text(
-                            text = "Actualizar",
+                            text = stringResource(id = R.string.coord_panel_btn_actualizar),
                             color = LinceCyan,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold
@@ -271,14 +275,27 @@ fun PanelCoordinadorScreen(
 
             // 2. Selectores compactos lado a lado: [Servicios ▾]   [Santiago ▾]
             item {
+                // Traducción interna de SeccionCoordinador para la vista
+                val etiquetaSeccion = when (seccionActiva) {
+                    SeccionCoordinador.SERVICIOS -> stringResource(id = R.string.nav_operador_servicios)
+                    SeccionCoordinador.TRANSPORTISTAS -> stringResource(id = R.string.admin_perfil_metrica_drivers) // "Drivers"
+                    SeccionCoordinador.GUIAS -> stringResource(id = R.string.admin_perfil_metrica_guias) // "Guías"
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     SelectorCompactoDropdown(
-                        etiquetaActual = seccionActiva.titulo,
+                        etiquetaActual = etiquetaSeccion,
                         opciones = SeccionCoordinador.values().toList(),
-                        obtenerTexto = { it.titulo },
+                        obtenerTexto = {
+                            when (it) {
+                                SeccionCoordinador.SERVICIOS -> stringResource(id = R.string.nav_operador_servicios)
+                                SeccionCoordinador.TRANSPORTISTAS -> stringResource(id = R.string.admin_perfil_metrica_drivers)
+                                SeccionCoordinador.GUIAS -> stringResource(id = R.string.admin_perfil_metrica_guias)
+                            }
+                        },
                         onSeleccionar = { viewModel.seleccionarSeccion(it) },
                         destacar = true,
                         modifier = Modifier.weight(1f)
@@ -321,12 +338,14 @@ fun PanelCoordinadorScreen(
                                 conteosPorEstado[filtro.estado] ?: 0
                             }
 
+                            val txtFiltro = stringResource(id = filtro.etiquetaResId)
+
                             FilterChip(
                                 selected = activo,
                                 onClick = { filtroEstado = filtro },
                                 label = {
                                     Text(
-                                        text = "${filtro.etiqueta} ($cantidad)",
+                                        text = stringResource(id = R.string.coord_filtro_estado_formato, txtFiltro, cantidad),
                                         fontSize = 12.sp,
                                         fontWeight = if (activo) FontWeight.Bold else FontWeight.Medium
                                     )
@@ -354,9 +373,9 @@ fun PanelCoordinadorScreen(
                             placeholder = {
                                 Text(
                                     text = if (seccionActiva == SeccionCoordinador.TRANSPORTISTAS) {
-                                        "Buscar transportista por nombre o código..."
+                                        stringResource(id = R.string.coord_busqueda_transp_hint)
                                     } else {
-                                        "Buscar guía por nombre o código..."
+                                        stringResource(id = R.string.coord_busqueda_guia_hint)
                                     },
                                     color = LinceTextSecondary,
                                     fontSize = 13.sp
@@ -365,7 +384,7 @@ fun PanelCoordinadorScreen(
                             trailingIcon = {
                                 if (queryBusqueda.isNotEmpty()) {
                                     TextButton(onClick = { viewModel.actualizarBusqueda("") }) {
-                                        Text("Limpiar", color = LinceCyan, fontSize = 12.sp)
+                                        Text(stringResource(id = R.string.coord_busqueda_limpiar), color = LinceCyan, fontSize = 12.sp)
                                     }
                                 }
                             },
@@ -390,7 +409,7 @@ fun PanelCoordinadorScreen(
                                 guiasOrdenados.size
                             }
                             Text(
-                                text = "$totalItems disponibles",
+                                text = stringResource(id = R.string.coord_orden_disponibles_formato, totalItems),
                                 color = LinceTextSecondary,
                                 fontSize = 12.sp
                             )
@@ -409,8 +428,9 @@ fun PanelCoordinadorScreen(
                                     }
                                 }
                             ) {
+                                val nombreOrden = stringResource(id = ordenPersonal.etiquetaResId)
                                 Text(
-                                    text = "Orden: ${ordenPersonal.etiqueta}",
+                                    text = stringResource(id = R.string.coord_orden_etiqueta_formato, nombreOrden),
                                     color = LinceCyan,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.SemiBold,
@@ -449,14 +469,18 @@ fun PanelCoordinadorScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = errorMensaje ?: "Error de conexión",
+                                // ==========================================
+                                // AQUÍ SE CORRIGE EL ERROR DE COMPILACIÓN
+                                // ==========================================
+                                text = errorMensaje?.let { stringResource(id = it) }
+                                    ?: stringResource(id = R.string.coord_error_conexion_fallback),
                                 color = LinceError,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             OutlinedButton(onClick = { viewModel.recargarTodo() }) {
-                                Text("Reintentar", color = LinceCyan)
+                                Text(stringResource(id = R.string.coord_error_btn_reintentar), color = LinceCyan)
                             }
                         }
                     }
@@ -466,7 +490,7 @@ fun PanelCoordinadorScreen(
                     SeccionCoordinador.SERVICIOS -> {
                         if (serviciosFiltrados.isEmpty()) {
                             item {
-                                MensajeListaVacia("No hay servicios en esta categoría para ${sedeSeleccionada.nombreCiudad}.")
+                                MensajeListaVacia(stringResource(id = R.string.coord_vacio_servicios, sedeSeleccionada.nombreCiudad))
                             }
                         } else {
                             items(serviciosFiltrados, key = { it.id }) { servicio ->
@@ -485,7 +509,7 @@ fun PanelCoordinadorScreen(
                     SeccionCoordinador.TRANSPORTISTAS -> {
                         if (transportistasOrdenados.isEmpty()) {
                             item {
-                                MensajeListaVacia("No se encontraron transportistas en ${sedeSeleccionada.nombreCiudad}.")
+                                MensajeListaVacia(stringResource(id = R.string.coord_vacio_transp, sedeSeleccionada.nombreCiudad))
                             }
                         } else {
                             items(transportistasOrdenados, key = { it.id }) { transportista ->
@@ -497,7 +521,7 @@ fun PanelCoordinadorScreen(
                     SeccionCoordinador.GUIAS -> {
                         if (guiasOrdenados.isEmpty()) {
                             item {
-                                MensajeListaVacia("No se encontraron guías en ${sedeSeleccionada.nombreCiudad}.")
+                                MensajeListaVacia(stringResource(id = R.string.coord_vacio_guias, sedeSeleccionada.nombreCiudad))
                             }
                         } else {
                             items(guiasOrdenados, key = { it.id }) { guia ->
@@ -515,7 +539,7 @@ fun PanelCoordinadorScreen(
 private fun <T> SelectorCompactoDropdown(
     etiquetaActual: String,
     opciones: List<T>,
-    obtenerTexto: (T) -> String,
+    obtenerTexto: @Composable (T) -> String, // Modificado para permitir stringResource
     onSeleccionar: (T) -> Unit,
     destacar: Boolean,
     modifier: Modifier = Modifier
@@ -588,14 +612,16 @@ private fun BarraSelectorFecha(
     onDiaSiguiente: () -> Unit,
     onAbrirCalendario: () -> Unit
 ) {
-    val localeEs = Locale("es", "CL")
-    val textoFecha = remember(fecha) {
+    val textoHoy = stringResource(id = R.string.coord_fecha_hoy, "")
+    val textoManana = stringResource(id = R.string.coord_fecha_manana, "")
+
+    val textoFecha = remember(fecha, textoHoy, textoManana) {
         val hoy = LocalDate.now()
-        val base = fecha.format(DateTimeFormatter.ofPattern("EEE d 'de' MMM yyyy", localeEs))
+        val base = fecha.format(DateTimeFormatter.ofPattern("EEE d MMM yyyy", Locale.getDefault()))
             .replaceFirstChar { it.uppercase() }
         when (fecha) {
-            hoy -> "Hoy · $base"
-            hoy.plusDays(1) -> "Mañana · $base"
+            hoy -> textoHoy.replace(" · ", " · $base")
+            hoy.plusDays(1) -> textoManana.replace(" · ", " · $base")
             else -> base
         }
     }
@@ -659,9 +685,9 @@ private fun DetalleServicioCoordinadorSheet(
     var confirmarCancelacion by remember { mutableStateOf(false) }
 
     val etiquetaTipo = when (servicio.tipo) {
-        TipoServicio.TRANSFER -> "Transfer"
-        TipoServicio.GUIDED_SERVICE -> "Servicio Guiado"
-        TipoServicio.EXCURSION -> "Excursión"
+        TipoServicio.TRANSFER -> stringResource(id = R.string.coord_sheet_tipo_transfer)
+        TipoServicio.GUIDED_SERVICE -> stringResource(id = R.string.coord_sheet_tipo_guiado)
+        TipoServicio.EXCURSION -> stringResource(id = R.string.coord_sheet_tipo_excursion)
     }
 
     val puedeCancelar = servicio.estado != EstadoServicio.FINALIZADO &&
@@ -713,16 +739,22 @@ private fun DetalleServicioCoordinadorSheet(
                     modifier = Modifier.padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    FilaDetalle("Fecha y Horario", "${servicio.fecha} · ${servicio.horaInicio} a ${servicio.horaFinEstimada}")
-                    FilaDetalle("Origen (Pickup)", servicio.lugarPickup)
-                    FilaDetalle("Destino (Drop-off)", servicio.lugarDropOff)
-                    FilaDetalle("Pasajeros", "${servicio.cantidadPasajeros} PAX (${servicio.paxTexto})")
                     FilaDetalle(
-                        etiqueta = if (!servicio.driverId.isNullOrBlank()) "Transportista" else "Guía",
-                        valor = nombreResponsable ?: "Sin asignar"
+                        stringResource(id = R.string.coord_sheet_fecha_hora),
+                        stringResource(id = R.string.coord_sheet_fecha_hora_formato, servicio.fecha, servicio.horaInicio, servicio.horaFinEstimada)
+                    )
+                    FilaDetalle(stringResource(id = R.string.coord_sheet_pickup), servicio.lugarPickup)
+                    FilaDetalle(stringResource(id = R.string.coord_sheet_dropoff), servicio.lugarDropOff)
+                    FilaDetalle(
+                        stringResource(id = R.string.coord_sheet_pax),
+                        stringResource(id = R.string.coord_sheet_pax_formato, servicio.cantidadPasajeros, servicio.paxTexto)
+                    )
+                    FilaDetalle(
+                        etiqueta = if (!servicio.driverId.isNullOrBlank()) stringResource(id = R.string.coord_sheet_transp_guia_etiqueta) else stringResource(id = R.string.coord_sheet_transp_guia_alt),
+                        valor = nombreResponsable ?: stringResource(id = R.string.coord_sheet_transp_guia_vacio)
                     )
                     if (!servicio.vehiculoId.isNullOrBlank()) {
-                        FilaDetalle("Vehículo asignado", servicio.vehiculoId)
+                        FilaDetalle(stringResource(id = R.string.coord_sheet_vehiculo), servicio.vehiculoId)
                     }
                 }
             }
@@ -741,7 +773,7 @@ private fun DetalleServicioCoordinadorSheet(
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = "Notas e Itinerario",
+                            text = stringResource(id = R.string.coord_sheet_notas_titulo),
                             color = LinceCyan,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
@@ -770,7 +802,7 @@ private fun DetalleServicioCoordinadorSheet(
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = "Trazabilidad Operativa",
+                            text = stringResource(id = R.string.coord_sheet_trazabilidad_titulo),
                             color = LinceSuccess,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
@@ -780,7 +812,7 @@ private fun DetalleServicioCoordinadorSheet(
                                 .atZone(ZoneId.systemDefault())
                                 .format(DateTimeFormatter.ofPattern("HH:mm"))
                             Text(
-                                text = "Check-in registrado a las $hora",
+                                text = stringResource(id = R.string.coord_sheet_checkin_formato, hora),
                                 color = LinceTextPrimary,
                                 fontSize = 13.sp
                             )
@@ -790,7 +822,7 @@ private fun DetalleServicioCoordinadorSheet(
                                 .atZone(ZoneId.systemDefault())
                                 .format(DateTimeFormatter.ofPattern("HH:mm"))
                             Text(
-                                text = "Check-out finalizado a las $hora",
+                                text = stringResource(id = R.string.coord_sheet_checkout_formato, hora),
                                 color = LinceTextPrimary,
                                 fontSize = 13.sp
                             )
@@ -813,7 +845,7 @@ private fun DetalleServicioCoordinadorSheet(
                             .fillMaxWidth()
                             .height(48.dp)
                     ) {
-                        Text("Cancelar Servicio", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(stringResource(id = R.string.coord_sheet_btn_cancelar_servicio), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                 } else {
                     Row(
@@ -827,7 +859,7 @@ private fun DetalleServicioCoordinadorSheet(
                                 .weight(1f)
                                 .height(48.dp)
                         ) {
-                            Text("Volver", color = LinceTextSecondary)
+                            Text(stringResource(id = R.string.coord_sheet_btn_volver), color = LinceTextSecondary)
                         }
                         Button(
                             onClick = {
@@ -843,7 +875,7 @@ private fun DetalleServicioCoordinadorSheet(
                                 .weight(1f)
                                 .height(48.dp)
                         ) {
-                            Text("Confirmar Cancelación", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text(stringResource(id = R.string.coord_sheet_btn_confirmar_cancel), fontWeight = FontWeight.Bold, fontSize = 13.sp)
                         }
                     }
                 }
@@ -884,7 +916,7 @@ private fun TarjetaTransportistaSegura(transportista: TransportistaDto) {
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "${transportista.codigo} · Base ${transportista.oficina.nombre}",
+                        text = stringResource(id = R.string.coord_tarjeta_base_formato, transportista.codigo, transportista.oficina.nombre),
                         color = LinceTextSecondary,
                         fontSize = 12.sp
                     )
@@ -903,7 +935,7 @@ private fun TarjetaTransportistaSegura(transportista: TransportistaDto) {
                 transportista.vehiculos.forEach { vehiculo ->
                     val tipoLegible = vehiculo.tipo.lowercase().replaceFirstChar { it.uppercase() }
                     Text(
-                        text = "• $tipoLegible (${vehiculo.patente}) · Cap. ${vehiculo.capacidad} pax",
+                        text = stringResource(id = R.string.coord_tarjeta_vehiculo_formato, tipoLegible, vehiculo.patente, vehiculo.capacidad),
                         color = LinceTextPrimary,
                         fontSize = 12.sp
                     )
@@ -937,7 +969,7 @@ private fun TarjetaGuiaSegura(guia: GuiaDto) {
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "${guia.codigo} · Base ${guia.oficina.nombre}",
+                        text = stringResource(id = R.string.coord_tarjeta_base_formato, guia.codigo, guia.oficina.nombre),
                         color = LinceTextSecondary,
                         fontSize = 12.sp
                     )
@@ -955,7 +987,7 @@ private fun TarjetaGuiaSegura(guia: GuiaDto) {
                 Spacer(modifier = Modifier.height(8.dp))
                 val idiomasLegibles = guia.idiomas.joinToString(" · ") { it.nombre }
                 Text(
-                    text = "Idiomas: $idiomasLegibles",
+                    text = stringResource(id = R.string.coord_tarjeta_idiomas, idiomasLegibles),
                     color = LinceCyan,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium

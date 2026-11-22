@@ -10,10 +10,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource // <-- IMPORT AÑADIDO
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.pminteractive.pmtours.R
 import com.pminteractive.pmtours.model.servicio.Servicio
 import com.pminteractive.pmtours.model.servicio.TipoServicio
 import com.pminteractive.pmtours.ui.theme.*
@@ -27,30 +29,35 @@ fun ServicioCoordinadorCard(
 ) {
     val esLocal = servicio.id.startsWith("SRV-LOC-")
 
+    // Reutilizamos los strings de la tarjeta del Driver
     val etiquetaTipo = when (servicio.tipo) {
-        TipoServicio.TRANSFER -> "TRANSFER"
-        TipoServicio.GUIDED_SERVICE -> "SERVICIO GUIADO"
-        TipoServicio.EXCURSION -> "EXCURSIÓN"
+        TipoServicio.TRANSFER -> stringResource(id = R.string.servicio_tipo_transfer)
+        TipoServicio.GUIDED_SERVICE -> stringResource(id = R.string.servicio_tipo_guiado)
+        TipoServicio.EXCURSION -> stringResource(id = R.string.servicio_tipo_excursion)
     }
 
+    val paxFormat = stringResource(id = R.string.servicio_pax_abreviado, "")
     val subtituloRuta = buildString {
         val origen = servicio.lugarPickup.substringBefore(",").trim()
         val destino = servicio.lugarDropOff.substringBefore(",").trim()
+
         if (origen.isNotBlank() && destino.isNotBlank()) {
             append("$origen → $destino")
         } else if (origen.isNotBlank()) {
             append(origen)
         }
+
         if (servicio.paxTexto.isNotBlank()) {
             if (isNotEmpty()) append(" · ")
-            append("${servicio.paxTexto} pax")
+            append(paxFormat.replace("", servicio.paxTexto).trim())
         }
     }
 
+    // Identificador de trabajador conectado a strings.xml
     val etiquetaResponsable = when {
-        !servicio.driverId.isNullOrBlank() -> "Driver: ${nombreAsignado ?: servicio.driverId}"
-        !servicio.guiaId.isNullOrBlank() -> "Guía: ${nombreAsignado ?: servicio.guiaId}"
-        else -> "Sin asignar"
+        !servicio.driverId.isNullOrBlank() -> stringResource(id = R.string.coord_card_driver, nombreAsignado ?: servicio.driverId)
+        !servicio.guiaId.isNullOrBlank() -> stringResource(id = R.string.coord_card_guia, nombreAsignado ?: servicio.guiaId)
+        else -> stringResource(id = R.string.coord_card_sin_asignar)
     }
 
     Surface(
@@ -86,7 +93,7 @@ fun ServicioCoordinadorCard(
                         )
                         if (esLocal) {
                             Text(
-                                text = "LOCAL",
+                                text = stringResource(id = R.string.coord_card_local),
                                 color = LinceBackground,
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold,

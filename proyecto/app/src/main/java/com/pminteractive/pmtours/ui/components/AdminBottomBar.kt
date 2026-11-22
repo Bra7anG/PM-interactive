@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource // <-- IMPORT AÑADIDO
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pminteractive.pmtours.R
@@ -19,6 +20,11 @@ fun AdminBottomBar(
     rutaActual: String,
     onNavegar: (String) -> Unit
 ) {
+    val txtUsuarios = stringResource(id = R.string.nav_admin_usuarios)
+    val txtServicios = stringResource(id = R.string.nav_admin_servicios)
+    val txtCrear = stringResource(id = R.string.nav_admin_crear)
+    val txtPerfil = stringResource(id = R.string.nav_admin_perfil)
+
     NavigationBar(
         containerColor = LinceBackground,
         tonalElevation = 8.dp
@@ -32,11 +38,11 @@ fun AdminBottomBar(
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_person),
-                    contentDescription = "Usuarios",
+                    contentDescription = txtUsuarios,
                     modifier = Modifier.size(24.dp)
                 )
             },
-            label = { Text("Usuarios", fontSize = 11.sp) },
+            label = { Text(txtUsuarios, fontSize = 11.sp) },
             colors = coloresLinceNav()
         )
 
@@ -49,11 +55,11 @@ fun AdminBottomBar(
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_map),
-                    contentDescription = "Servicios",
+                    contentDescription = txtServicios,
                     modifier = Modifier.size(24.dp)
                 )
             },
-            label = { Text("Servicios", fontSize = 11.sp) },
+            label = { Text(txtServicios, fontSize = 11.sp) },
             colors = coloresLinceNav()
         )
 
@@ -66,12 +72,12 @@ fun AdminBottomBar(
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_add),
-                    contentDescription = "Crear",
+                    contentDescription = txtCrear,
                     modifier = Modifier.size(28.dp),
                     tint = LinceCyan
                 )
             },
-            label = { Text("Crear", fontSize = 11.sp, color = LinceCyan) },
+            label = { Text(txtCrear, fontSize = 11.sp, color = LinceCyan) },
             colors = coloresLinceNav()
         )
 
@@ -84,11 +90,11 @@ fun AdminBottomBar(
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_info), // O ic_settings
-                    contentDescription = "Perfil",
+                    contentDescription = txtPerfil,
                     modifier = Modifier.size(24.dp)
                 )
             },
-            label = { Text("Perfil", fontSize = 11.sp) },
+            label = { Text(txtPerfil, fontSize = 11.sp) },
             colors = coloresLinceNav()
         )
     }

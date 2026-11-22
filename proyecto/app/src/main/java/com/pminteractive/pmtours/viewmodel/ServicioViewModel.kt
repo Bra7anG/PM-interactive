@@ -1,11 +1,11 @@
 /**
- * OBJETIVO DEL SCRIPT:
- * Gestionar la lógica de negocio, trazabilidad operativa y liquidación mensual de servicios para el operador.
+- OBJETIVO DEL SCRIPT:
+- Gestionar la lógica de negocio, trazabilidad operativa y liquidación mensual de servicios para el operador.
  *
- * RESUMEN:
- * Expone la lista de viajes asignados de forma dinámica según el usuario autenticado,
- * filtra los servicios finalizados históricos para mantener limpia la agenda de trabajo,
- * procesa los hitos de Check-in y Check-out con validación horaria, y calcula el resumen financiero del mes.
+- RESUMEN:
+- Expone la lista de viajes asignados de forma dinámica según el usuario autenticado,
+- filtra los servicios finalizados históricos para mantener limpia la agenda de trabajo,
+- procesa los hitos de Check-in y Check-out con validación horaria, y calcula el resumen financiero del mes.
  */
 package com.pminteractive.pmtours.viewmodel
 
@@ -77,9 +77,9 @@ class ServicioViewModel(
     }
 
     /**
-     * Conecta la vista con el repositorio filtrando únicamente los viajes pertinentes a la agenda:
-     * - Servicios activos/futuros: Siempre visibles (ASIGNADO, CONFIRMADO, EN_RUTA, CANCELADO).
-     * - Servicios FINALIZADOS: Solo visibles si fueron ejecutados en el mes actual.
+    - Conecta la vista con el repositorio filtrando únicamente los viajes pertinentes a la agenda:
+    - - Servicios activos/futuros: Siempre visibles (ASIGNADO, CONFIRMADO, EN_RUTA, CANCELADO).
+    - - Servicios FINALIZADOS: Solo visibles si fueron ejecutados en el mes actual.
      */
     fun cargarServiciosDelUsuario(trabajadorId: String, forzarRecarga: Boolean = false) {
         if (trabajadorId.isBlank()) {
@@ -126,8 +126,10 @@ class ServicioViewModel(
     // Cálculo reactivo mensual para la pantalla de Perfil (utiliza la lista completa)
     val resumenMesActual: StateFlow<ResumenLiquidacion> = servicios.map { lista ->
         val mesActual = YearMonth.now()
+
+        // CORRECCIÓN I18N: Adaptarse al idioma del sistema (Locale.getDefault())
         val nombreMesFormateado = mesActual.format(
-            DateTimeFormatter.ofPattern("MMMM yyyy", Locale("es", "CL"))
+            DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
         ).replaceFirstChar { it.uppercase() }
 
         var total = 0.0

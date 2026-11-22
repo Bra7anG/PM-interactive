@@ -13,12 +13,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource // <-- IMPORT AÑADIDO
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pminteractive.pmtours.R
 import com.pminteractive.pmtours.model.datosoperativos.Sede
 import com.pminteractive.pmtours.model.operadores.Usuario
 import com.pminteractive.pmtours.model.servicio.TipoServicio
@@ -77,12 +79,12 @@ fun CrearServicioScreen(
                     }
                     mostrarDatePicker = false
                 }) {
-                    Text("Aceptar", color = LinceCyan, fontWeight = FontWeight.Bold)
+                    Text(stringResource(id = R.string.crear_btn_aceptar), color = LinceCyan, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { mostrarDatePicker = false }) {
-                    Text("Cancelar", color = LinceTextSecondary)
+                    Text(stringResource(id = R.string.crear_btn_cancelar), color = LinceTextSecondary)
                 }
             },
             colors = DatePickerDefaults.colors(containerColor = LinceSurface)
@@ -160,13 +162,16 @@ private fun ContenidoCrearServicio(
         item {
             Column {
                 Text(
-                    text = "Crear Servicio",
+                    text = stringResource(id = R.string.crear_titulo),
                     color = LinceTextPrimary,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Asignación operativa · ${usuario?.nombreCompleto ?: "Coordinador"}",
+                    text = stringResource(
+                        id = R.string.crear_subtitulo,
+                        usuario?.nombreCompleto ?: stringResource(id = R.string.crear_rol_coordinador_fallback)
+                    ),
                     color = LinceTextSecondary,
                     fontSize = 13.sp
                 )
@@ -175,9 +180,9 @@ private fun ContenidoCrearServicio(
 
         // 2. Sede y Tipo de Servicio
         item {
-            SeccionFormulario(titulo = "1. Sede y Tipo de Servicio") {
+            SeccionFormulario(titulo = stringResource(id = R.string.crear_sec1_titulo)) {
                 Text(
-                    text = "Sede operativa",
+                    text = stringResource(id = R.string.crear_sec1_sede),
                     color = LinceTextSecondary,
                     fontSize = 12.sp
                 )
@@ -211,7 +216,7 @@ private fun ContenidoCrearServicio(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = "Modalidad del servicio",
+                    text = stringResource(id = R.string.crear_sec1_modalidad),
                     color = LinceTextSecondary,
                     fontSize = 12.sp
                 )
@@ -223,9 +228,9 @@ private fun ContenidoCrearServicio(
                     TipoServicio.values().forEach { tipo ->
                         val activo = tipo == uiState.tipoServicio
                         val etiqueta = when (tipo) {
-                            TipoServicio.TRANSFER -> "Transfer"
-                            TipoServicio.EXCURSION -> "Excursión"
-                            TipoServicio.GUIDED_SERVICE -> "Guiado"
+                            TipoServicio.TRANSFER -> stringResource(id = R.string.crear_tipo_transfer)
+                            TipoServicio.EXCURSION -> stringResource(id = R.string.crear_tipo_excursion)
+                            TipoServicio.GUIDED_SERVICE -> stringResource(id = R.string.crear_tipo_guiado)
                         }
                         FilterChip(
                             selected = activo,
@@ -251,12 +256,12 @@ private fun ContenidoCrearServicio(
 
         // 3. Reserva y Agencia / Cliente
         item {
-            SeccionFormulario(titulo = "2. Reserva y Cliente") {
+            SeccionFormulario(titulo = stringResource(id = R.string.crear_sec2_titulo)) {
                 CampoTextoLince(
                     valor = uiState.numeroReserva,
                     onValorCambio = { viewModel.actualizarNumeroReserva(it) },
-                    etiqueta = "Código de Reserva *",
-                    placeholder = "Ej: WHFT223423"
+                    etiqueta = stringResource(id = R.string.crear_sec2_reserva),
+                    placeholder = stringResource(id = R.string.crear_sec2_reserva_hint)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -264,20 +269,25 @@ private fun ContenidoCrearServicio(
                 CampoTextoLince(
                     valor = uiState.titulo,
                     onValorCambio = { viewModel.actualizarTitulo(it) },
-                    etiqueta = "Título o Descripción *",
-                    placeholder = "Ej: Transfer IN Aeropuerto SCL - Hotel"
+                    etiqueta = stringResource(id = R.string.crear_sec2_desc),
+                    placeholder = stringResource(id = R.string.crear_sec2_desc_hint)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                val txtClienteCargando = stringResource(id = R.string.crear_sec2_cliente_cargando)
+                val txtClienteSeleccionar = stringResource(id = R.string.crear_sec2_cliente_seleccionar)
+                val txtClienteVacio = stringResource(id = R.string.crear_sec2_cliente_vacio)
+                val formatCliente = stringResource(id = R.string.crear_sec2_cliente_formato, "", "")
+
                 SelectorDesplegableLince(
-                    etiqueta = "Agencia / Cliente (Opcional)",
+                    etiqueta = stringResource(id = R.string.crear_sec2_cliente),
                     textoSeleccionado = uiState.clienteSeleccionado?.let {
-                        "${it.nombre} (${it.pais})"
-                    } ?: if (uiState.cargandoCatalogos) "Cargando clientes..." else "Seleccionar cliente...",
+                        formatCliente.replaceFirst("", it.nombre).replaceFirst("", it.pais)
+                    } ?: if (uiState.cargandoCatalogos) txtClienteCargando else txtClienteSeleccionar,
                     opciones = listOf(null) + uiState.clientes,
                     obtenerTextoOpcion = { cliente ->
-                        cliente?.let { "${it.nombre} (${it.pais})" } ?: "Sin cliente específico"
+                        cliente?.let { formatCliente.replaceFirst("", it.nombre).replaceFirst("", it.pais) } ?: txtClienteVacio
                     },
                     onSeleccionar = { viewModel.seleccionarCliente(it) }
                 )
@@ -286,9 +296,9 @@ private fun ContenidoCrearServicio(
 
         // 4. Fecha (Calendario Ilimitado), Horarios y Ruta
         item {
-            SeccionFormulario(titulo = "3. Fecha, Horario y Ruta") {
+            SeccionFormulario(titulo = stringResource(id = R.string.crear_sec3_titulo)) {
                 Text(
-                    text = "Fecha del servicio *",
+                    text = stringResource(id = R.string.crear_sec3_fecha),
                     color = LinceTextSecondary,
                     fontSize = 12.sp
                 )
@@ -310,14 +320,14 @@ private fun ContenidoCrearServicio(
                     CampoTextoLince(
                         valor = uiState.horaInicio,
                         onValorCambio = { viewModel.actualizarHoraInicio(it) },
-                        etiqueta = "Hora Pickup *",
+                        etiqueta = stringResource(id = R.string.crear_sec3_hora_inicio),
                         placeholder = "09:00",
                         modifier = Modifier.weight(1f)
                     )
                     CampoTextoLince(
                         valor = uiState.horaFinEstimada,
                         onValorCambio = { viewModel.actualizarHoraFin(it) },
-                        etiqueta = "Hora Fin Est.",
+                        etiqueta = stringResource(id = R.string.crear_sec3_hora_fin),
                         placeholder = "11:00",
                         modifier = Modifier.weight(1f)
                     )
@@ -328,8 +338,8 @@ private fun ContenidoCrearServicio(
                 CampoTextoLince(
                     valor = uiState.lugarPickup,
                     onValorCambio = { viewModel.actualizarPickup(it) },
-                    etiqueta = "Punto de Origen (Pickup) *",
-                    placeholder = "Ej: Aeropuerto Arturo Merino Benítez"
+                    etiqueta = stringResource(id = R.string.crear_sec3_pickup),
+                    placeholder = stringResource(id = R.string.crear_sec3_pickup_hint)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -337,28 +347,28 @@ private fun ContenidoCrearServicio(
                 CampoTextoLince(
                     valor = uiState.lugarDropOff,
                     onValorCambio = { viewModel.actualizarDropOff(it) },
-                    etiqueta = "Punto de Destino (Drop-off) *",
-                    placeholder = "Ej: Hotel Mandarin Oriental, Las Condes"
+                    etiqueta = stringResource(id = R.string.crear_sec3_dropoff),
+                    placeholder = stringResource(id = R.string.crear_sec3_dropoff_hint)
                 )
             }
         }
 
         // 5. Pasajeros (PAX)
         item {
-            SeccionFormulario(titulo = "4. Pasajeros (PAX)") {
+            SeccionFormulario(titulo = stringResource(id = R.string.crear_sec4_titulo)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     ContadorPax(
-                        etiqueta = "Adultos",
+                        etiqueta = stringResource(id = R.string.crear_sec4_adultos),
                         valor = uiState.adultos,
                         onDecrementar = { viewModel.actualizarAdultos(uiState.adultos - 1) },
                         onIncrementar = { viewModel.actualizarAdultos(uiState.adultos + 1) },
                         modifier = Modifier.weight(1f)
                     )
                     ContadorPax(
-                        etiqueta = "Niños",
+                        etiqueta = stringResource(id = R.string.crear_sec4_ninos),
                         valor = uiState.ninos,
                         onDecrementar = { viewModel.actualizarNinos(uiState.ninos - 1) },
                         onIncrementar = { viewModel.actualizarNinos(uiState.ninos + 1) },
@@ -369,7 +379,7 @@ private fun ContenidoCrearServicio(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Total: ${uiState.adultos + uiState.ninos} pasajeros (${uiState.adultos}+${uiState.ninos})",
+                    text = stringResource(id = R.string.crear_sec4_total, uiState.adultos + uiState.ninos, uiState.adultos, uiState.ninos),
                     color = LinceCyan,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold
@@ -379,7 +389,7 @@ private fun ContenidoCrearServicio(
 
         // 6. Asignación Operativa con revisión de días bloqueados
         item {
-            SeccionFormulario(titulo = "5. Asignación de Personal") {
+            SeccionFormulario(titulo = stringResource(id = R.string.crear_sec5_titulo)) {
                 if (uiState.cargandoStaff) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -392,27 +402,33 @@ private fun ContenidoCrearServicio(
                             strokeWidth = 2.dp
                         )
                         Text(
-                            text = "Cargando staff y disponibilidad...",
+                            text = stringResource(id = R.string.crear_sec5_cargando),
                             color = LinceTextSecondary,
                             fontSize = 12.sp
                         )
                     }
                 } else if (uiState.esServicioTransporte) {
+
+                    val transAvisoBloqueo = stringResource(id = R.string.crear_sec5_transp_bloqueado_aviso)
+                    val transOpcionBloqueo = stringResource(id = R.string.crear_sec5_transp_opcion_bloqueado, "", "")
+                    val transOpcionViajes = stringResource(id = R.string.crear_sec5_transp_opcion_viajes, "", "", 0)
+                    val transOpcionLibre = stringResource(id = R.string.crear_sec5_transp_opcion_libre, "", "", 0)
+
                     SelectorDesplegableLince(
-                        etiqueta = "Transportista (${uiState.sedeSeleccionada.nombreCiudad}) *",
+                        etiqueta = stringResource(id = R.string.crear_sec5_transp_etiqueta, uiState.sedeSeleccionada.nombreCiudad),
                         textoSeleccionado = uiState.transportistaSeleccionado?.let { t ->
-                            val aviso = if (uiState.estaBloqueadoEnFecha(t.codigo)) " · 🚫 Bloqueado" else ""
+                            val aviso = if (uiState.estaBloqueadoEnFecha(t.codigo)) transAvisoBloqueo else ""
                             "${t.nombre} (${t.codigo})$aviso"
-                        } ?: "Seleccionar transportista...",
+                        } ?: stringResource(id = R.string.crear_sec5_transp_seleccionar),
                         opciones = uiState.transportistas,
                         obtenerTextoOpcion = { t ->
                             when {
                                 uiState.estaBloqueadoEnFecha(t.codigo) ->
-                                    "${t.nombre} (${t.codigo}) · 🚫 Día bloqueado"
+                                    transOpcionBloqueo.replaceFirst("", t.nombre).replaceFirst("", t.codigo)
                                 uiState.tieneViajesEnFecha(t.codigo) ->
-                                    "${t.nombre} (${t.codigo}) · ${t.vehiculos.size} veh. (Con viajes)"
+                                    transOpcionViajes.replaceFirst("", t.nombre).replaceFirst("", t.codigo).replaceFirst("0", t.vehiculos.size.toString())
                                 else ->
-                                    "${t.nombre} (${t.codigo}) · ${t.vehiculos.size} veh."
+                                    transOpcionLibre.replaceFirst("", t.nombre).replaceFirst("", t.codigo).replaceFirst("0", t.vehiculos.size.toString())
                             }
                         },
                         onSeleccionar = { viewModel.seleccionarTransportista(it) }
@@ -421,7 +437,7 @@ private fun ContenidoCrearServicio(
                     if (uiState.trabajadorSeleccionadoBloqueado) {
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Este transportista tiene bloqueado el día seleccionado en su calendario.",
+                            text = stringResource(id = R.string.crear_sec5_error_bloqueo_transp),
                             color = LinceError,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
@@ -431,52 +447,60 @@ private fun ContenidoCrearServicio(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     val vehiculosFlota = uiState.transportistaSeleccionado?.vehiculos ?: emptyList()
+                    val vehiculoOpcionFormat = stringResource(id = R.string.crear_sec5_vehiculo_opcion, "", "", 0)
+
                     SelectorDesplegableLince(
-                        etiqueta = "Vehículo de Flota *",
+                        etiqueta = stringResource(id = R.string.crear_sec5_vehiculo_etiqueta),
                         textoSeleccionado = uiState.vehiculoSeleccionado?.let { v ->
                             val tipoLegible = v.tipo.lowercase().replaceFirstChar { it.uppercase() }
-                            "$tipoLegible · ${v.patente} (Cap. ${v.capacidad} pax)"
+                            vehiculoOpcionFormat.replaceFirst("", tipoLegible).replaceFirst("", v.patente).replaceFirst("0", v.capacidad.toString())
                         } ?: if (uiState.transportistaSeleccionado == null) {
-                            "Primero selecciona un transportista"
+                            stringResource(id = R.string.crear_sec5_vehiculo_requiere_transp)
                         } else {
-                            "Seleccionar vehículo..."
+                            stringResource(id = R.string.crear_sec5_vehiculo_seleccionar)
                         },
                         opciones = vehiculosFlota,
                         obtenerTextoOpcion = { v ->
                             val tipoLegible = v.tipo.lowercase().replaceFirstChar { it.uppercase() }
-                            "$tipoLegible · ${v.patente} (Cap. ${v.capacidad} pax)"
+                            vehiculoOpcionFormat.replaceFirst("", tipoLegible).replaceFirst("", v.patente).replaceFirst("0", v.capacidad.toString())
                         },
                         onSeleccionar = { viewModel.seleccionarVehiculo(it) }
                     )
                 } else {
+                    val idiomaTodos = stringResource(id = R.string.crear_sec5_idioma_todos)
                     SelectorDesplegableLince(
-                        etiqueta = "Idioma Requerido (Filtro)",
-                        textoSeleccionado = uiState.idiomaSeleccionado?.nombre ?: "Todos los idiomas",
+                        etiqueta = stringResource(id = R.string.crear_sec5_idioma_etiqueta),
+                        textoSeleccionado = uiState.idiomaSeleccionado?.nombre ?: idiomaTodos,
                         opciones = listOf(null) + uiState.idiomas,
                         obtenerTextoOpcion = { idioma ->
-                            idioma?.nombre ?: "Todos los idiomas"
+                            idioma?.nombre ?: idiomaTodos
                         },
                         onSeleccionar = { viewModel.seleccionarIdioma(it) }
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
 
+                    val guiaOpcionBloqueado = stringResource(id = R.string.crear_sec5_guia_opcion_bloqueado, "")
+                    val guiaOpcionViajes = stringResource(id = R.string.crear_sec5_guia_opcion_viajes, "", "")
+                    val guiaOpcionLibre = stringResource(id = R.string.crear_sec5_guia_opcion_libre, "", "")
+                    val avisoBloqueo = stringResource(id = R.string.crear_sec5_transp_bloqueado_aviso)
+
                     SelectorDesplegableLince(
-                        etiqueta = "Guía Turístico (${uiState.sedeSeleccionada.nombreCiudad}) *",
+                        etiqueta = stringResource(id = R.string.crear_sec5_guia_etiqueta, uiState.sedeSeleccionada.nombreCiudad),
                         textoSeleccionado = uiState.guiaSeleccionado?.let { g ->
-                            val aviso = if (uiState.estaBloqueadoEnFecha(g.codigo)) " · 🚫 Bloqueado" else ""
+                            val aviso = if (uiState.estaBloqueadoEnFecha(g.codigo)) avisoBloqueo else ""
                             "${g.nombre} (${g.codigo})$aviso"
-                        } ?: "Seleccionar guía (${uiState.guiasDisponiblesParaIdioma.size} disp.)...",
+                        } ?: stringResource(id = R.string.crear_sec5_guia_seleccionar, uiState.guiasDisponiblesParaIdioma.size),
                         opciones = uiState.guiasDisponiblesParaIdioma,
                         obtenerTextoOpcion = { g ->
                             val idiomasTexto = g.idiomas.joinToString(", ") { it.nombre }
                             when {
                                 uiState.estaBloqueadoEnFecha(g.codigo) ->
-                                    "${g.nombre} · 🚫 Día bloqueado"
+                                    guiaOpcionBloqueado.replaceFirst("", g.nombre)
                                 uiState.tieneViajesEnFecha(g.codigo) ->
-                                    "${g.nombre} · $idiomasTexto (Con viajes)"
+                                    guiaOpcionViajes.replaceFirst("", g.nombre).replaceFirst("", idiomasTexto)
                                 else ->
-                                    "${g.nombre} · $idiomasTexto"
+                                    guiaOpcionLibre.replaceFirst("", g.nombre).replaceFirst("", idiomasTexto)
                             }
                         },
                         onSeleccionar = { viewModel.seleccionarGuia(it) }
@@ -485,7 +509,7 @@ private fun ContenidoCrearServicio(
                     if (uiState.trabajadorSeleccionadoBloqueado) {
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Este guía tiene bloqueado el día seleccionado en su calendario.",
+                            text = stringResource(id = R.string.crear_sec5_error_bloqueo_guia),
                             color = LinceError,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
@@ -497,19 +521,22 @@ private fun ContenidoCrearServicio(
 
         // 7. Notas Operativas
         item {
-            SeccionFormulario(titulo = "6. Notas Operativas (Opcional)") {
+            SeccionFormulario(titulo = stringResource(id = R.string.crear_sec6_titulo)) {
                 CampoTextoLince(
                     valor = uiState.notasAgencia,
                     onValorCambio = { viewModel.actualizarNotas(it) },
-                    etiqueta = "Instrucciones para el operador",
-                    placeholder = "Ej: Vuelo LA501, cartel con nombre del pasajero..."
+                    etiqueta = stringResource(id = R.string.crear_sec6_notas),
+                    placeholder = stringResource(id = R.string.crear_sec6_notas_hint)
                 )
             }
         }
 
         // 8. Mensaje de error y Botón Guardar
         item {
-            if (uiState.errorMensaje != null) {
+            // ==========================================
+            // AQUÍ SE CORRIGE EL ERROR DE COMPILACIÓN I18N
+            // ==========================================
+            if (uiState.errorMensajeResId != null) {
                 Surface(
                     color = LinceError.copy(alpha = 0.15f),
                     shape = RoundedCornerShape(10.dp),
@@ -520,8 +547,16 @@ private fun ContenidoCrearServicio(
                         .fillMaxWidth()
                         .padding(bottom = 10.dp)
                 ) {
+                    val textoError = if (uiState.errorMensajeArg1 != null && uiState.errorMensajeArg2 != null) {
+                        stringResource(id = uiState.errorMensajeResId!!, uiState.errorMensajeArg1, uiState.errorMensajeArg2)
+                    } else if (uiState.errorMensajeArg1 != null) {
+                        stringResource(id = uiState.errorMensajeResId!!, uiState.errorMensajeArg1)
+                    } else {
+                        stringResource(id = uiState.errorMensajeResId!!)
+                    }
+
                     Text(
-                        text = uiState.errorMensaje ?: "",
+                        text = textoError,
                         color = LinceError,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
@@ -550,7 +585,7 @@ private fun ContenidoCrearServicio(
                     )
                 } else {
                     Text(
-                        text = "Crear y Asignar Servicio",
+                        text = stringResource(id = R.string.crear_btn_guardar),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -567,14 +602,16 @@ private fun SelectorFechaIlimitada(
     onDiaSiguiente: () -> Unit,
     onAbrirCalendario: () -> Unit
 ) {
-    val localeEs = Locale("es", "CL")
-    val textoFecha = remember(fecha) {
+    val textoHoy = stringResource(id = R.string.crear_fecha_hoy, "")
+    val textoManana = stringResource(id = R.string.crear_fecha_manana, "")
+
+    val textoFecha = remember(fecha, textoHoy, textoManana) {
         val hoy = LocalDate.now()
-        val base = fecha.format(DateTimeFormatter.ofPattern("EEE d 'de' MMM yyyy", localeEs))
+        val base = fecha.format(DateTimeFormatter.ofPattern("EEE d MMM yyyy", Locale.getDefault()))
             .replaceFirstChar { it.uppercase() }
         when (fecha) {
-            hoy -> "Hoy · $base"
-            hoy.plusDays(1) -> "Mañana · $base"
+            hoy -> textoHoy.replace(" · ", " · $base")
+            hoy.plusDays(1) -> textoManana.replace(" · ", " · $base")
             else -> base
         }
     }

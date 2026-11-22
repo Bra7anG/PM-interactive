@@ -1,6 +1,6 @@
 /**
- * OBJETIVO DEL SCRIPT:
- * Pantalla principal de agenda y hoja de ruta de servicios para el operador (Driver o Guía).
+- OBJETIVO DEL SCRIPT:
+- Pantalla principal de agenda y hoja de ruta de servicios para el operador (Driver o Guía).
  */
 package com.pminteractive.pmtours.ui.screens.driverGuia
 
@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource // <-- IMPORT AÑADIDO
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -52,13 +53,14 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
-enum class FiltroEstadoServicio(val etiqueta: String, val estado: EstadoServicio?) {
-    TODOS("Todos", null),
-    PENDIENTES("Pendientes", EstadoServicio.ASIGNADO),
-    CONFIRMADOS("Confirmados", EstadoServicio.CONFIRMADO),
-    EN_RUTA("En ruta", EstadoServicio.EN_RUTA),
-    FINALIZADOS("Finalizados", EstadoServicio.FINALIZADO),
-    CANCELADOS("Cancelados", EstadoServicio.CANCELADO)
+// Transformamos los Filtros a una clase con identificadores de recurso (R.string...)
+enum class FiltroEstadoServicio(val stringResId: Int, val estado: EstadoServicio?) {
+    TODOS(R.string.filtro_todos, null),
+    PENDIENTES(R.string.filtro_pendientes, EstadoServicio.ASIGNADO),
+    CONFIRMADOS(R.string.filtro_confirmados, EstadoServicio.CONFIRMADO),
+    EN_RUTA(R.string.filtro_en_ruta, EstadoServicio.EN_RUTA),
+    FINALIZADOS(R.string.filtro_finalizados, EstadoServicio.FINALIZADO),
+    CANCELADOS(R.string.filtro_cancelados, EstadoServicio.CANCELADO)
 }
 
 @Composable
@@ -110,13 +112,15 @@ fun ServiciosScreen(
     var filtroSeleccionado by remember { mutableStateOf(FiltroEstadoServicio.TODOS) }
     var mostrarDatePicker by remember { mutableStateOf(false) }
 
+    // Fechas dinámicas al idioma del dispositivo
+    val fallbackMes = stringResource(id = R.string.servicios_mes_actual_fallback)
     val nombreMesActual = remember {
         try {
             val hoy = LocalDate.now()
-            val formato = DateTimeFormatter.ofPattern("MMMM", Locale("es", "CL"))
+            val formato = DateTimeFormatter.ofPattern("MMMM", Locale.getDefault())
             hoy.format(formato).replaceFirstChar { it.uppercase() }
         } catch (e: Exception) {
-            "este mes"
+            fallbackMes
         }
     }
 
@@ -171,14 +175,14 @@ fun ServiciosScreen(
 
             // 1. Cabecera
             Text(
-                text = "Hoja de Ruta",
+                text = stringResource(id = R.string.servicios_titulo),
                 color = LinceTextSecondary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "Hola, $nombreUsuario",
+                text = stringResource(id = R.string.servicios_saludo, nombreUsuario),
                 color = LinceTextPrimary,
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold
@@ -197,7 +201,7 @@ fun ServiciosScreen(
                             .background(LincePending)
                     )
                     Text(
-                        text = "Sin conexión · Datos locales",
+                        text = stringResource(id = R.string.servicios_sin_conexion),
                         color = LincePending,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium
@@ -223,7 +227,7 @@ fun ServiciosScreen(
                 onValueChange = { textoBusqueda = it },
                 placeholder = {
                     Text(
-                        text = "Buscar hotel, destino o reserva...",
+                        text = stringResource(id = R.string.servicios_busqueda_hint),
                         color = LinceTextSecondary.copy(alpha = 0.7f),
                         fontSize = 14.sp
                     )
@@ -281,7 +285,7 @@ fun ServiciosScreen(
                         modifier = Modifier.testTag("chip_${filtro.name}"),
                         label = {
                             Text(
-                                text = filtro.etiqueta,
+                                text = stringResource(id = filtro.stringResId),
                                 fontSize = 12.sp,
                                 fontWeight = if (seleccionado) FontWeight.Bold else FontWeight.Medium
                             )
@@ -329,7 +333,7 @@ fun ServiciosScreen(
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = "Mostrando servicios finalizados de $nombreMesActual (${serviciosFiltrados.size} completados)",
+                            text = stringResource(id = R.string.servicios_banner_finalizados, nombreMesActual, serviciosFiltrados.size),
                             color = LinceTextSecondary,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
@@ -359,7 +363,7 @@ fun ServiciosScreen(
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = "Servicios cancelados (${serviciosFiltrados.size} · tarifa resguardada según política)",
+                            text = stringResource(id = R.string.servicios_banner_cancelados, serviciosFiltrados.size),
                             color = LinceTextSecondary,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
@@ -401,7 +405,7 @@ fun ServiciosScreen(
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    text = "No se encontraron servicios asignados para esta fecha y filtro.",
+                                    text = stringResource(id = R.string.servicios_lista_vacia),
                                     color = LinceTextSecondary,
                                     fontSize = 13.sp
                                 )
@@ -428,14 +432,17 @@ private fun BarraSelectorFechaActiva(
     onDiaSiguiente: () -> Unit,
     onAbrirCalendario: () -> Unit
 ) {
-    val localeEs = Locale("es", "CL")
-    val textoFecha = remember(fecha) {
+    // Usamos el idioma del dispositivo
+    val textoHoy = stringResource(id = R.string.servicios_fecha_hoy, "")
+    val textoManana = stringResource(id = R.string.servicios_fecha_manana, "")
+
+    val textoFecha = remember(fecha, textoHoy, textoManana) {
         val hoy = LocalDate.now()
-        val base = fecha.format(DateTimeFormatter.ofPattern("EEE d 'de' MMM yyyy", localeEs))
+        val base = fecha.format(DateTimeFormatter.ofPattern("EEE d MMM yyyy", Locale.getDefault()))
             .replaceFirstChar { it.uppercase() }
         when (fecha) {
-            hoy -> "Hoy · $base"
-            hoy.plusDays(1) -> "Mañana · $base"
+            hoy -> textoHoy.replace(" · ", " · $base") // Truco limpio para reutilizar el formato
+            hoy.plusDays(1) -> textoManana.replace(" · ", " · $base")
             else -> base
         }
     }
@@ -510,7 +517,7 @@ private fun DialogCalendarioLince(
     val visibleMonth = calendarState.firstVisibleMonth.yearMonth
 
     val textoMesVisible = remember(visibleMonth) {
-        visibleMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale("es", "CL"))).replaceFirstChar { it.uppercase() }
+        visibleMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())).replaceFirstChar { it.uppercase() }
     }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -547,7 +554,7 @@ private fun DialogCalendarioLince(
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
                     diasSemana.forEach { dia ->
                         Text(
-                            text = dia.getDisplayName(TextStyle.NARROW, Locale("es", "CL")).uppercase(),
+                            text = dia.getDisplayName(TextStyle.NARROW, Locale.getDefault()).uppercase(),
                             color = LinceTextSecondary, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.width(32.dp)
                         )
                     }
@@ -604,7 +611,7 @@ private fun DialogCalendarioLince(
                 // Botón Cancelar
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancelar", color = LinceTextSecondary)
+                        Text(stringResource(id = R.string.calendario_btn_cancelar), color = LinceTextSecondary)
                     }
                 }
             }

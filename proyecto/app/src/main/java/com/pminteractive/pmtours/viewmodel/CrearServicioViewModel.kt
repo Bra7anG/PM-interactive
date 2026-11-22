@@ -2,6 +2,7 @@ package com.pminteractive.pmtours.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pminteractive.pmtours.R // <-- IMPORT PARA LOS STRINGS
 import com.pminteractive.pmtours.model.datosoperativos.Sede
 import com.pminteractive.pmtours.model.servicio.EstadoServicio
 import com.pminteractive.pmtours.model.servicio.Servicio
@@ -29,18 +30,13 @@ import java.util.Locale
 typealias MapaDiasBloqueados = Map<String, Set<LocalDate>>
 
 data class CrearServicioUiState(
-    // Listas cargadas desde la API
     val oficinas: List<OficinaDto> = emptyList(),
     val idiomas: List<IdiomaDto> = emptyList(),
     val clientes: List<ClienteDto> = emptyList(),
     val transportistas: List<TransportistaDto> = emptyList(),
     val guias: List<GuiaDto> = emptyList(),
-
-    // Disponibilidad y ocupación en la fecha elegida
     val bloqueosPorTrabajador: MapaDiasBloqueados = emptyMap(),
     val trabajadoresConViajesEseDia: Set<String> = emptySet(),
-
-    // Campos del formulario
     val numeroReserva: String = "",
     val titulo: String = "",
     val tipoServicio: TipoServicio = TipoServicio.TRANSFER,
@@ -59,13 +55,16 @@ data class CrearServicioUiState(
     val guiaSeleccionado: GuiaDto? = null,
     val tarifaTexto: String = "",
     val notasAgencia: String = "",
-
-    // Estados de carga y validación
     val cargandoCatalogos: Boolean = false,
     val cargandoStaff: Boolean = false,
     val guardando: Boolean = false,
     val servicioCreadoExito: Boolean = false,
-    val errorMensaje: String? = null
+
+    // CAMBIO I18N: Usar IDs en vez de Strings duros
+    val errorMensajeResId: Int? = null,
+    // Variables de apoyo para inyectar en el string (como la Sede o el nombre del trabajador)
+    val errorMensajeArg1: String? = null,
+    val errorMensajeArg2: String? = null
 ) {
     val esServicioTransporte: Boolean
         get() = tipoServicio == TipoServicio.TRANSFER || tipoServicio == TipoServicio.EXCURSION
@@ -119,7 +118,7 @@ class CrearServicioViewModel(
 
     private fun cargarCatalogosYClientes() {
         viewModelScope.launch {
-            _uiState.update { it.copy(cargandoCatalogos = true, errorMensaje = null) }
+            _uiState.update { it.copy(cargandoCatalogos = true, errorMensajeResId = null) }
 
             val catalogosRes = repository.obtenerCatalogos()
             val clientesRes = repository.obtenerClientes()
@@ -130,9 +129,9 @@ class CrearServicioViewModel(
                     idiomas = catalogosRes.getOrNull()?.idiomas ?: emptyList(),
                     clientes = clientesRes.getOrNull() ?: emptyList(),
                     cargandoCatalogos = false,
-                    errorMensaje = if (catalogosRes.isFailure || clientesRes.isFailure) {
-                        "No se pudieron cargar algunos catálogos desde la API."
-                    } else null
+                    errorMensajeResId = if (catalogosRes.isFailure || clientesRes.isFailure) R.string.crear_error_catalogos else null,
+                    errorMensajeArg1 = null,
+                    errorMensajeArg2 = null
                 )
             }
         }
@@ -147,7 +146,6 @@ class CrearServicioViewModel(
             val guiasLista = repository.obtenerGuias(oficinaCodigo = sede.codigo)
                 .getOrDefault(emptyList())
 
-            // Consulta días bloqueados de cada trabajador en DisponibilidadRepository
             val todosLosCodigos = transportistasLista.map { it.codigo } + guiasLista.map { it.codigo }
             val mapaBloqueos = buildMap {
                 todosLosCodigos.forEach { codigo ->
@@ -160,7 +158,6 @@ class CrearServicioViewModel(
                 }
             }
 
-            // Consulta qué trabajadores ya tienen viajes asignados ese día
             val ocupados = obtenerCodigosOcupadosEnFecha(fecha, sede)
 
             _uiState.update { state ->
@@ -196,13 +193,12 @@ class CrearServicioViewModel(
         }
     }
 
-    // Actualizaciones de campos
     fun actualizarNumeroReserva(valor: String) {
-        _uiState.update { it.copy(numeroReserva = valor, errorMensaje = null) }
+        _uiState.update { it.copy(numeroReserva = valor, errorMensajeResId = null) }
     }
 
     fun actualizarTitulo(valor: String) {
-        _uiState.update { it.copy(titulo = valor, errorMensaje = null) }
+        _uiState.update { it.copy(titulo = valor, errorMensajeResId = null) }
     }
 
     fun seleccionarTipoServicio(tipo: TipoServicio) {
@@ -213,7 +209,7 @@ class CrearServicioViewModel(
                 vehiculoSeleccionado = null,
                 guiaSeleccionado = null,
                 idiomaSeleccionado = null,
-                errorMensaje = null
+                errorMensajeResId = null
             )
         }
     }
@@ -226,14 +222,14 @@ class CrearServicioViewModel(
                 transportistaSeleccionado = null,
                 vehiculoSeleccionado = null,
                 guiaSeleccionado = null,
-                errorMensaje = null
+                errorMensajeResId = null
             )
         }
         cargarStaffYDisponibilidad(sede, _uiState.value.fecha)
     }
 
     fun seleccionarCliente(cliente: ClienteDto?) {
-        _uiState.update { it.copy(clienteSeleccionado = cliente, errorMensaje = null) }
+        _uiState.update { it.copy(clienteSeleccionado = cliente, errorMensajeResId = null) }
     }
 
     fun seleccionarIdioma(idioma: IdiomaDto?) {
@@ -244,39 +240,39 @@ class CrearServicioViewModel(
             state.copy(
                 idiomaSeleccionado = idioma,
                 guiaSeleccionado = guiaValido,
-                errorMensaje = null
+                errorMensajeResId = null
             )
         }
     }
 
     fun seleccionarFecha(fecha: LocalDate) {
         if (_uiState.value.fecha == fecha) return
-        _uiState.update { it.copy(fecha = fecha, errorMensaje = null) }
+        _uiState.update { it.copy(fecha = fecha, errorMensajeResId = null) }
         actualizarOcupacionFecha(fecha, _uiState.value.sedeSeleccionada)
     }
 
     fun actualizarHoraInicio(valor: String) {
-        _uiState.update { it.copy(horaInicio = valor, errorMensaje = null) }
+        _uiState.update { it.copy(horaInicio = valor, errorMensajeResId = null) }
     }
 
     fun actualizarHoraFin(valor: String) {
-        _uiState.update { it.copy(horaFinEstimada = valor, errorMensaje = null) }
+        _uiState.update { it.copy(horaFinEstimada = valor, errorMensajeResId = null) }
     }
 
     fun actualizarPickup(valor: String) {
-        _uiState.update { it.copy(lugarPickup = valor, errorMensaje = null) }
+        _uiState.update { it.copy(lugarPickup = valor, errorMensajeResId = null) }
     }
 
     fun actualizarDropOff(valor: String) {
-        _uiState.update { it.copy(lugarDropOff = valor, errorMensaje = null) }
+        _uiState.update { it.copy(lugarDropOff = valor, errorMensajeResId = null) }
     }
 
     fun actualizarAdultos(cantidad: Int) {
-        _uiState.update { it.copy(adultos = cantidad.coerceAtLeast(1), errorMensaje = null) }
+        _uiState.update { it.copy(adultos = cantidad.coerceAtLeast(1), errorMensajeResId = null) }
     }
 
     fun actualizarNinos(cantidad: Int) {
-        _uiState.update { it.copy(ninos = cantidad.coerceAtLeast(0), errorMensaje = null) }
+        _uiState.update { it.copy(ninos = cantidad.coerceAtLeast(0), errorMensajeResId = null) }
     }
 
     fun seleccionarTransportista(transportista: TransportistaDto?) {
@@ -284,87 +280,93 @@ class CrearServicioViewModel(
             it.copy(
                 transportistaSeleccionado = transportista,
                 vehiculoSeleccionado = transportista?.vehiculos?.firstOrNull(),
-                errorMensaje = null
+                errorMensajeResId = null
             )
         }
     }
 
     fun seleccionarVehiculo(vehiculo: VehiculoDto?) {
-        _uiState.update { it.copy(vehiculoSeleccionado = vehiculo, errorMensaje = null) }
+        _uiState.update { it.copy(vehiculoSeleccionado = vehiculo, errorMensajeResId = null) }
     }
 
     fun seleccionarGuia(guia: GuiaDto?) {
-        _uiState.update { it.copy(guiaSeleccionado = guia, errorMensaje = null) }
+        _uiState.update { it.copy(guiaSeleccionado = guia, errorMensajeResId = null) }
     }
 
     fun actualizarTarifa(valor: String) {
         val soloNumeros = valor.filter { it.isDigit() }
-        _uiState.update { it.copy(tarifaTexto = soloNumeros, errorMensaje = null) }
+        _uiState.update { it.copy(tarifaTexto = soloNumeros, errorMensajeResId = null) }
     }
 
     fun actualizarNotas(valor: String) {
-        _uiState.update { it.copy(notasAgencia = valor, errorMensaje = null) }
+        _uiState.update { it.copy(notasAgencia = valor, errorMensajeResId = null) }
     }
 
     fun guardarServicio() {
         val state = _uiState.value
 
         if (state.numeroReserva.isBlank()) {
-            _uiState.update { it.copy(errorMensaje = "Ingresa el número de reserva.") }
+            _uiState.update { it.copy(errorMensajeResId = R.string.crear_error_reserva, errorMensajeArg1 = null) }
             return
         }
         if (state.titulo.isBlank()) {
-            _uiState.update { it.copy(errorMensaje = "Ingresa el título o descripción del servicio.") }
+            _uiState.update { it.copy(errorMensajeResId = R.string.crear_error_titulo, errorMensajeArg1 = null) }
             return
         }
         if (state.lugarPickup.isBlank() || state.lugarDropOff.isBlank()) {
-            _uiState.update { it.copy(errorMensaje = "Completa los puntos de pickup y destino.") }
+            _uiState.update { it.copy(errorMensajeResId = R.string.crear_error_puntos, errorMensajeArg1 = null) }
             return
         }
         if (runCatching { LocalTime.parse(state.horaInicio.trim()) }.isFailure) {
-            _uiState.update { it.copy(errorMensaje = "La hora de inicio debe tener formato HH:mm (ej. 09:30).") }
+            _uiState.update { it.copy(errorMensajeResId = R.string.crear_error_hora, errorMensajeArg1 = null) }
             return
         }
 
         if (state.esServicioTransporte) {
             if (state.transportistaSeleccionado == null) {
-                _uiState.update { it.copy(errorMensaje = "Selecciona un transportista de ${state.sedeSeleccionada.nombreCiudad}.") }
+                _uiState.update { it.copy(errorMensajeResId = R.string.crear_error_transp, errorMensajeArg1 = state.sedeSeleccionada.nombreCiudad) }
                 return
             }
             if (state.vehiculoSeleccionado == null) {
-                _uiState.update { it.copy(errorMensaje = "Selecciona un vehículo de la flota del transportista.") }
+                _uiState.update { it.copy(errorMensajeResId = R.string.crear_error_vehiculo, errorMensajeArg1 = null) }
                 return
             }
         } else {
             if (state.guiaSeleccionado == null) {
-                _uiState.update { it.copy(errorMensaje = "Selecciona un guía turístico de ${state.sedeSeleccionada.nombreCiudad}.") }
+                _uiState.update { it.copy(errorMensajeResId = R.string.crear_error_guia, errorMensajeArg1 = state.sedeSeleccionada.nombreCiudad) }
                 return
             }
         }
 
-        // Bloqueo estricto si el operador marcó ese día como no disponible
         if (state.trabajadorSeleccionadoBloqueado) {
-            val fechaLegible = state.fecha.format(DateTimeFormatter.ofPattern("d 'de' MMM yyyy", Locale("es", "CL")))
+            val fechaLegible = state.fecha.format(DateTimeFormatter.ofPattern("d MMM yyyy", Locale.getDefault()))
             val nombreOperador = if (state.esServicioTransporte) {
                 state.transportistaSeleccionado?.nombre
             } else {
                 state.guiaSeleccionado?.nombre
             }
             _uiState.update {
-                it.copy(errorMensaje = "$nombreOperador tiene bloqueado el $fechaLegible. Elige otro operador o cambia la fecha.")
+                it.copy(
+                    errorMensajeResId = R.string.crear_error_bloqueo,
+                    errorMensajeArg1 = nombreOperador ?: "Operador",
+                    errorMensajeArg2 = fechaLegible
+                )
             }
             return
         }
 
         val totalPax = state.adultos + state.ninos
+
+        // El detalle del itinerario interno a nivel backend (BD) podría ir en español,
+        // pero lo ideal es no fallar y mandarlo en duro o mapearlo. Lo dejaremos como data interna.
         val infoExtra = buildList {
-            state.clienteSeleccionado?.let { add("Cliente: ${it.nombre}") }
-            state.idiomaSeleccionado?.let { add("Idioma: ${it.nombre}") }
+            state.clienteSeleccionado?.let { add("Client: ${it.nombre}") }
+            state.idiomaSeleccionado?.let { add("Lang: ${it.nombre}") }
             if (state.esServicioTransporte) {
                 state.transportistaSeleccionado?.let { add("Driver: ${it.nombre}") }
-                state.vehiculoSeleccionado?.let { add("Vehículo: ${it.tipo} (${it.patente})") }
+                state.vehiculoSeleccionado?.let { add("Veh: ${it.tipo} (${it.patente})") }
             } else {
-                state.guiaSeleccionado?.let { add("Guía: ${it.nombre}") }
+                state.guiaSeleccionado?.let { add("Guide: ${it.nombre}") }
             }
         }.joinToString(" · ")
 
@@ -390,13 +392,13 @@ class CrearServicioViewModel(
         )
 
         viewModelScope.launch {
-            _uiState.update { it.copy(guardando = true, errorMensaje = null) }
+            _uiState.update { it.copy(guardando = true, errorMensajeResId = null) }
             repository.crearServicioLocal(state.sedeSeleccionada.codigo, nuevoServicio)
                 .onSuccess {
                     _uiState.update { it.copy(guardando = false, servicioCreadoExito = true) }
                 }
                 .onFailure {
-                    _uiState.update { it.copy(guardando = false, errorMensaje = "Error al guardar el servicio.") }
+                    _uiState.update { it.copy(guardando = false, errorMensajeResId = R.string.crear_error_guardar) }
                 }
         }
     }

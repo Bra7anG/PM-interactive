@@ -2,6 +2,7 @@ package com.pminteractive.pmtours.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pminteractive.pmtours.R // <-- IMPORT AÑADIDO PARA LOS STRINGS
 import com.pminteractive.pmtours.model.datosoperativos.Sede
 import com.pminteractive.pmtours.model.servicio.EstadoServicio
 import com.pminteractive.pmtours.model.servicio.Servicio
@@ -71,8 +72,9 @@ class CoordinadorViewModel(
     private val _cargando = MutableStateFlow(false)
     val cargando: StateFlow<Boolean> = _cargando.asStateFlow()
 
-    private val _errorMensaje = MutableStateFlow<String?>(null)
-    val errorMensaje: StateFlow<String?> = _errorMensaje.asStateFlow()
+    // CAMBIO A INT PARA SOPORTAR I18N
+    private val _errorMensaje = MutableStateFlow<Int?>(null)
+    val errorMensaje: StateFlow<Int?> = _errorMensaje.asStateFlow()
 
     private var sedeInicializada = false
     private var jobBusqueda: Job? = null
@@ -203,7 +205,7 @@ class CoordinadorViewModel(
             _errorMensaje.value = null
             repository.obtenerServiciosPorDiaYSede(fechaStr, oficinaCod)
                 .onSuccess { lista -> _servicios.value = lista }
-                .onFailure { _errorMensaje.value = "No se pudieron cargar los servicios." }
+                .onFailure { _errorMensaje.value = R.string.coord_error_cargar_servicios }
             _cargando.value = false
         }
     }
@@ -222,7 +224,7 @@ class CoordinadorViewModel(
                         actual + lista.associate { it.codigo to it.nombre }
                     }
                 }
-                .onFailure { _errorMensaje.value = "No se pudieron cargar los transportistas." }
+                .onFailure { _errorMensaje.value = R.string.coord_error_cargar_transportistas }
             _cargando.value = false
         }
     }
@@ -241,7 +243,7 @@ class CoordinadorViewModel(
                         actual + lista.associate { it.codigo to it.nombre }
                     }
                 }
-                .onFailure { _errorMensaje.value = "No se pudieron cargar los guías." }
+                .onFailure { _errorMensaje.value = R.string.coord_error_cargar_guias }
             _cargando.value = false
         }
     }

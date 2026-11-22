@@ -2,6 +2,7 @@ package com.pminteractive.pmtours.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pminteractive.pmtours.R // <-- IMPORT AÑADIDO PARA LOS STRINGS
 import com.pminteractive.pmtours.model.operadores.Usuario
 import com.pminteractive.pmtours.repository.AppContainer
 import com.pminteractive.pmtours.repository.AuthRepository
@@ -16,7 +17,8 @@ sealed interface AuthUiState {
     data object Inactivo : AuthUiState // Muestra el formulario
     data object Cargando : AuthUiState // Muestra el Splash Screen
     data class Autenticado(val usuario: Usuario) : AuthUiState
-    data class Error(val mensaje: String) : AuthUiState
+    // CAMBIO: Ahora recibe el ID del recurso (Int) en vez de un String fijo
+    data class Error(val mensajeResId: Int) : AuthUiState
 }
 
 class AuthViewModel(
@@ -54,7 +56,7 @@ class AuthViewModel(
 
     fun iniciarSesion(usuario: String, contrasena: String) {
         if (usuario.isBlank() || contrasena.isBlank()) {
-            _uiState.value = AuthUiState.Error("Debe ingresar usuario y contraseña.")
+            _uiState.value = AuthUiState.Error(R.string.login_error_campos_vacios)
             return
         }
 
@@ -72,11 +74,12 @@ class AuthViewModel(
 
                     _uiState.value = AuthUiState.Autenticado(usuarioAutenticado)
                 },
-                onFailure = { excepcion ->
+                onFailure = {
+                    // Reemplazamos el excepcion.message por un error genérico localizable
                     AppContainer.sharedPreferences.edit()
                         .clear()
                         .apply()
-                    _uiState.value = AuthUiState.Error(excepcion.message ?: "Error al autenticar.")
+                    _uiState.value = AuthUiState.Error(R.string.login_error_autenticacion)
                 }
             )
         }
