@@ -2,76 +2,259 @@ package com.pminteractive.pmtours.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pminteractive.pmtours.R // <-- IMPORT AÑADIDO PARA LOS STRINGS
 import com.pminteractive.pmtours.model.datosoperativos.Sede
 import com.pminteractive.pmtours.model.servicio.EstadoServicio
+import com.pminteractive.pmtours.model.servicio.Servicio
+import com.pminteractive.pmtours.network.dto.GuiaDto
+import com.pminteractive.pmtours.network.dto.ResumenDto
+import com.pminteractive.pmtours.network.dto.TransportistaDto
 import com.pminteractive.pmtours.repository.AppContainer
-import com.pminteractive.pmtours.repository.AuthRepository
-import com.pminteractive.pmtours.repository.ServicioRepository
+import com.pminteractive.pmtours.repository.CoordinadorRepository
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
-data class AsignacionCoordinador(
-    val servicioId: String,
-    val nombreOperador: String,
-    val hora: String,
-    val tipo: String,
-    val titulo: String,
-    val estado: EstadoServicio
-)
+typealias DiccionarioNombres = Map<String, String>
+
+enum class SeccionCoordinador(val titulo: String) {
+    SERVICIOS("Servicios"),
+    TRANSPORTISTAS("Transportistas"),
+    GUIAS("Guías")
+}
 
 data class ResumenCoordinador(
+    val total: Int = 0,
     val pendientes: Int = 0,
     val confirmados: Int = 0,
     val rechazados: Int = 0
 )
 
 class CoordinadorViewModel(
-    private val servicioRepository: ServicioRepository = AppContainer.servicioRepository,
-    private val authRepository: AuthRepository = AppContainer.authRepository
+    private val repository: CoordinadorRepository = AppContainer.coordinadorRepository
 ) : ViewModel() {
 
-    private val _asignaciones = MutableStateFlow<List<AsignacionCoordinador>>(emptyList())
-    val asignaciones: StateFlow<List<AsignacionCoordinador>> = _asignaciones.asStateFlow()
+    private val _sedeSeleccionada = MutableStateFlow(Sede.SANTIAGO)
+    val sedeSeleccionada: StateFlow<Sede> = _sedeSeleccionada.asStateFlow()
+
+    private val _fechaSeleccionada = MutableStateFlow(LocalDate.now())
+    val fechaSeleccionada: StateFlow<LocalDate> = _fechaSeleccionada.asStateFlow()
+
+    private val _seccionActiva = MutableStateFlow(SeccionCoordinador.SERVICIOS)
+    val seccionActiva: StateFlow<SeccionCoordinador> = _seccionActiva.asStateFlow()
+
+    private val _queryBusqueda = MutableStateFlow("")
+    val queryBusqueda: StateFlow<String> = _queryBusqueda.asStateFlow()
+
+    private val _servicios = MutableStateFlow<List<Servicio>>(emptyList())
+    val servicios: StateFlow<List<Servicio>> = _servicios.asStateFlow()
+
+    private val _transportistas = MutableStateFlow<List<TransportistaDto>>(emptyList())
+    val transportistas: StateFlow<List<TransportistaDto>> = _transportistas.asStateFlow()
+
+    private val _guias = MutableStateFlow<List<GuiaDto>>(emptyList())
+    val guias: StateFlow<List<GuiaDto>> = _guias.asStateFlow()
+
+    private val _nombresTrabajadores = MutableStateFlow<DiccionarioNombres>(emptyMap())
+    val nombresTrabajadores: StateFlow<DiccionarioNombres> = _nombresTrabajadores.asStateFlow()
+
+    private val _servicioDetalle = MutableStateFlow<Servicio?>(null)
+    val servicioDetalle: StateFlow<Servicio?> = _servicioDetalle.asStateFlow()
 
     private val _resumen = MutableStateFlow(ResumenCoordinador())
     val resumen: StateFlow<ResumenCoordinador> = _resumen.asStateFlow()
 
-    private var jobObservador: Job? = null
+    private val _cargando = MutableStateFlow(false)
+    val cargando: StateFlow<Boolean> = _cargando.asStateFlow()
 
-    fun cargarServiciosDeSede(sede: Sede) {
-        jobObservador?.cancel()
-        jobObservador = viewModelScope.launch {
-            val operadoresPorId = authRepository.obtenerUsuarios().associateBy { it.id }
+    // CAMBIO A INT PARA SOPORTAR I18N
+    private val _errorMensaje = MutableStateFlow<Int?>(null)
+    val errorMensaje: StateFlow<Int?> = _errorMensaje.asStateFlow()
 
-            servicioRepository.obtenerTodosLosServicios().collect { servicios ->
-                val serviciosDeSede = servicios.filter { servicio ->
-                    val operadorId = servicio.driverId ?: servicio.guiaId
-                    val operador = operadorId?.let { operadoresPorId[it] }
-                    operador?.sede == sede
+    private var sedeInicializada = false
+    private var jobBusqueda: Job? = null
+    private var ultimaBusquedaEjecutada: String = ""
+
+    init {
+        // Observamos en vivo la creación de servicios locales para actualizar la UI al instante
+        viewModelScope.launch {
+            repository.observarServiciosLocales().collect {
+                if (_seccionActiva.value == SeccionCoordinador.SERVICIOS) {
+                    cargarServicios()
                 }
-
-                _asignaciones.value = serviciosDeSede.map { servicio ->
-                    val operadorId = servicio.driverId ?: servicio.guiaId
-                    val operador = operadorId?.let { operadoresPorId[it] }
-                    AsignacionCoordinador(
-                        servicioId = servicio.id,
-                        nombreOperador = operador?.nombreCompleto ?: "Sin asignar",
-                        hora = servicio.horaInicio,
-                        tipo = servicio.tipo.descripcion,
-                        titulo = servicio.titulo,
-                        estado = servicio.estado
-                    )
-                }
-
-                _resumen.value = ResumenCoordinador(
-                    pendientes = serviciosDeSede.count { it.estado == EstadoServicio.ASIGNADO },
-                    confirmados = serviciosDeSede.count { it.estado == EstadoServicio.CONFIRMADO },
-                    rechazados = serviciosDeSede.count { it.estado == EstadoServicio.RECHAZADO }
-                )
             }
         }
+    }
+
+    fun inicializar(sedeCoordinador: Sede) {
+        if (!sedeInicializada) {
+            _sedeSeleccionada.value = sedeCoordinador
+            sedeInicializada = true
+        }
+        recargarTodo()
+    }
+
+    fun seleccionarSede(nuevaSede: Sede) {
+        if (_sedeSeleccionada.value == nuevaSede) return
+        _sedeSeleccionada.value = nuevaSede
+        ultimaBusquedaEjecutada = _queryBusqueda.value.trim()
+        recargarTodo()
+    }
+
+    fun seleccionarFecha(nuevaFecha: LocalDate) {
+        if (_fechaSeleccionada.value == nuevaFecha) return
+        _fechaSeleccionada.value = nuevaFecha
+        cargarResumen()
+        if (_seccionActiva.value == SeccionCoordinador.SERVICIOS) {
+            cargarServicios()
+        }
+    }
+
+    fun seleccionarSeccion(nuevaSeccion: SeccionCoordinador) {
+        if (_seccionActiva.value == nuevaSeccion) return
+        _seccionActiva.value = nuevaSeccion
+        _queryBusqueda.value = ""
+        ultimaBusquedaEjecutada = ""
+        cargarSeccionActual()
+    }
+
+    fun actualizarBusqueda(texto: String) {
+        _queryBusqueda.value = texto
+        val textoLimpio = texto.trim()
+
+        if (textoLimpio == ultimaBusquedaEjecutada) return
+
+        jobBusqueda?.cancel()
+        jobBusqueda = viewModelScope.launch {
+            delay(400)
+            ultimaBusquedaEjecutada = textoLimpio
+            if (_seccionActiva.value != SeccionCoordinador.SERVICIOS) {
+                cargarSeccionActual()
+            }
+        }
+    }
+
+    fun abrirDetalleServicio(servicio: Servicio) {
+        _servicioDetalle.value = servicio
+    }
+
+    fun cerrarDetalleServicio() {
+        _servicioDetalle.value = null
+    }
+
+    fun cancelarServicio(servicioId: String) {
+        repository.registrarCambioServicio(
+            servicioId = servicioId,
+            nuevoEstado = EstadoServicio.CANCELADO
+        )
+        _servicioDetalle.update { actual ->
+            if (actual?.id == servicioId) actual.copy(estado = EstadoServicio.CANCELADO) else actual
+        }
+        cargarServicios()
+    }
+
+    fun recargarTodo() {
+        cargarDiccionarioNombres(_sedeSeleccionada.value.codigo)
+        cargarResumen()
+        cargarSeccionActual()
+    }
+
+    private fun cargarDiccionarioNombres(oficinaCod: String) {
+        viewModelScope.launch {
+            val drivers = repository.obtenerTransportistas(oficinaCod, null).getOrDefault(emptyList())
+            val guiasLista = repository.obtenerGuias(oficinaCod, null).getOrDefault(emptyList())
+
+            val mapaNuevo: DiccionarioNombres =
+                drivers.associate { it.codigo to it.nombre } +
+                        guiasLista.associate { it.codigo to it.nombre }
+
+            _nombresTrabajadores.update { it + mapaNuevo }
+        }
+    }
+
+    private fun cargarResumen() {
+        val fechaStr = _fechaSeleccionada.value.toString()
+        val oficinaCod = _sedeSeleccionada.value.codigo
+
+        viewModelScope.launch {
+            repository.obtenerResumen(fechaStr, oficinaCod).onSuccess { dto ->
+                _resumen.value = mapearResumen(dto)
+            }
+        }
+    }
+
+    private fun cargarSeccionActual() {
+        when (_seccionActiva.value) {
+            SeccionCoordinador.SERVICIOS -> cargarServicios()
+            SeccionCoordinador.TRANSPORTISTAS -> cargarTransportistas()
+            SeccionCoordinador.GUIAS -> cargarGuias()
+        }
+    }
+
+    private fun cargarServicios() {
+        val fechaStr = _fechaSeleccionada.value.toString()
+        val oficinaCod = _sedeSeleccionada.value.codigo
+
+        viewModelScope.launch {
+            _cargando.value = true
+            _errorMensaje.value = null
+            repository.obtenerServiciosPorDiaYSede(fechaStr, oficinaCod)
+                .onSuccess { lista -> _servicios.value = lista }
+                .onFailure { _errorMensaje.value = R.string.coord_error_cargar_servicios }
+            _cargando.value = false
+        }
+    }
+
+    private fun cargarTransportistas() {
+        val oficinaCod = _sedeSeleccionada.value.codigo
+        val query = ultimaBusquedaEjecutada.takeIf { it.isNotEmpty() }
+
+        viewModelScope.launch {
+            _cargando.value = true
+            _errorMensaje.value = null
+            repository.obtenerTransportistas(oficinaCod, query)
+                .onSuccess { lista ->
+                    _transportistas.value = lista
+                    _nombresTrabajadores.update { actual ->
+                        actual + lista.associate { it.codigo to it.nombre }
+                    }
+                }
+                .onFailure { _errorMensaje.value = R.string.coord_error_cargar_transportistas }
+            _cargando.value = false
+        }
+    }
+
+    private fun cargarGuias() {
+        val oficinaCod = _sedeSeleccionada.value.codigo
+        val query = ultimaBusquedaEjecutada.takeIf { it.isNotEmpty() }
+
+        viewModelScope.launch {
+            _cargando.value = true
+            _errorMensaje.value = null
+            repository.obtenerGuias(oficinaCod, query)
+                .onSuccess { lista ->
+                    _guias.value = lista
+                    _nombresTrabajadores.update { actual ->
+                        actual + lista.associate { it.codigo to it.nombre }
+                    }
+                }
+                .onFailure { _errorMensaje.value = R.string.coord_error_cargar_guias }
+            _cargando.value = false
+        }
+    }
+
+    private fun mapearResumen(dto: ResumenDto): ResumenCoordinador {
+        val conteo = dto.porStatusPL.associate { it.clave to it.servicios }
+        return ResumenCoordinador(
+            total = dto.totalServicios,
+            confirmados = conteo["CF"] ?: 0,
+            pendientes = (conteo["RQ"] ?: 0) + (conteo["SIN_ASIGNAR"] ?: 0),
+            rechazados = (conteo["DL"] ?: 0) + (conteo["CX"] ?: 0)
+        )
     }
 }

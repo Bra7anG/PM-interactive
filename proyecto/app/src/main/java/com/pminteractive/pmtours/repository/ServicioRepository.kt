@@ -1,26 +1,17 @@
-/**
- * OBJETIVO DEL SCRIPT:
- * Gestionar la persistencia y consulta reactiva de servicios turísticos asignados a operadores.
- *
- * RESUMEN:
- * Expone un flujo de datos en tiempo real mediante StateFlow, implementando las reglas de asignación
- * de la planilla oficial y registrando hitos de Check-in y Check-out en memoria.
- *
- * DETALLE:
- * - Cumple con la regla de asignación de la API: TRANSFER y EXCURSION solo asignan transportista;
- *   GUIDED_SERVICE asigna únicamente guía turístico.
- * - Utiliza códigos de servicio y reserva basados en el esquema de la empresa (SRV-000245, etc.).
- * - Gestiona estados inmutables mediante '.copy()' y emisión a través de 'MutableStateFlow'.
- */
 package com.pminteractive.pmtours.repository
 
 import com.pminteractive.pmtours.model.servicio.EstadoServicio
 import com.pminteractive.pmtours.model.servicio.RegistroHitoGps
 import com.pminteractive.pmtours.model.servicio.Servicio
 import com.pminteractive.pmtours.model.servicio.TipoServicio
+import com.pminteractive.pmtours.network.LinceApiService
+import com.pminteractive.pmtours.network.toDomain
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import java.time.LocalDate
 
 interface ServicioRepository {
@@ -33,392 +24,228 @@ interface ServicioRepository {
     suspend fun registrarCheckOut(servicioId: String, hito: RegistroHitoGps): Result<Unit>
 }
 
-class FakeServicioRepository : ServicioRepository {
+class HybridServicioRepository(
+    private val apiService: LinceApiService,
+    private val coordinadorRepository: CoordinadorRepository
+) : ServicioRepository {
 
-    private val hoy: LocalDate = LocalDate.now()
+    private val _serviciosRemotos = MutableStateFlow<List<Servicio>>(emptyList())
 
-    private fun fecha(dias: Long = 0): String = hoy.plusDays(dias).toString()
-
-    private val _servicios = MutableStateFlow(
-        listOf(
-            // 1. Servicio completado a principios de mes (suma a liquidación)
-            Servicio(
-                id = "SRV-000240",
-                numeroReserva = "WHFT223100",
-                titulo = "Transfer Out: Hotel Lastarria -> Aeropuerto SCL",
-                tipo = TipoServicio.TRANSFER,
-                fecha = "2026-10-05",
-                horaInicio = "07:00",
-                horaFinEstimada = "08:30",
-                lugarPickup = "Hotel Barrio Lastarria, Santiago",
-                lugarDropOff = "Aeropuerto Internacional Arturo Merino Benítez",
-                cantidadPasajeros = 2,
-                paxTexto = "2+0",
-                driverId = "TRA-001",
-                vehiculoId = "VEH-14",
-                guiaId = null,
-                estado = EstadoServicio.FINALIZADO,
-                tarifaAcordada = 45000.0,
-                notasAgencia = "Pasajeros con vuelo internacional temprano.",
-                detalleItinerario = "Traslado directo por Costanera Norte."
-            ),
-            // 2. Excursión completada la semana pasada (suma a liquidación)
-            Servicio(
-                id = "SRV-000242",
-                numeroReserva = "WHFT223150",
-                titulo = "Excursión Viña Concha y Toro · Pirque",
-                tipo = TipoServicio.EXCURSION,
-                fecha = "2026-10-12",
-                horaInicio = "10:00",
-                horaFinEstimada = "15:30",
-                lugarPickup = "Hotel Cumbres Lastarria, Santiago",
-                lugarDropOff = "Hotel Cumbres Lastarria, Santiago",
-                cantidadPasajeros = 4,
-                paxTexto = "4+0",
-                driverId = "TRA-001",
-                vehiculoId = "VEH-31",
-                guiaId = null,
-                estado = EstadoServicio.FINALIZADO,
-                tarifaAcordada = 80000.0,
-                notasAgencia = "Degustación premium reservada para las 11:30.",
-                detalleItinerario = "Ruta directa Santiago a Pirque y retorno."
-            ),
-            // 3. Servicio cancelado por no-show de cliente (tarifa protegida, suma a liquidación)
-            Servicio(
-                id = "SRV-000244",
-                numeroReserva = "WHFT223210",
-                titulo = "Transfer In: Aeropuerto SCL -> Hotel Sheraton",
-                tipo = TipoServicio.TRANSFER,
-                fecha = "2026-10-15",
-                horaInicio = "13:00",
-                horaFinEstimada = "14:30",
-                lugarPickup = "Aeropuerto Internacional Arturo Merino Benítez",
-                lugarDropOff = "Hotel Sheraton, Providencia",
-                cantidadPasajeros = 1,
-                paxTexto = "1+0",
-                driverId = "TRA-001",
-                vehiculoId = "VEH-14",
-                guiaId = null,
-                estado = EstadoServicio.CANCELADO,
-                tarifaAcordada = 45000.0,
-                notasAgencia = "Cliente perdió vuelo de conexión. Tarifa resguardada para transportista.",
-                detalleItinerario = "Espera en aeropuerto y cancelación reportada por operaciones."
-            ),
-            // 4. Servicio asignado para hoy o próximos días (NO suma aún a liquidación)
-            Servicio(
-                id = "SRV-000245",
-                numeroReserva = "WHFT223423",
-                titulo = "Transfer In: Aeropuerto SCL -> Hotel Barrio Lastarria",
-                tipo = TipoServicio.TRANSFER,
-                fecha = "2026-10-20",
-                horaInicio = "09:00",
-                horaFinEstimada = "10:30",
-                lugarPickup = "Aeropuerto Internacional Arturo Merino Benítez (Puerta 4)",
-                lugarDropOff = "Hotel Barrio Lastarria, Santiago",
-                cantidadPasajeros = 2,
-                paxTexto = "2+0",
-                driverId = "TRA-001",
-                vehiculoId = "VEH-14",
-                guiaId = null,
-                estado = EstadoServicio.ASIGNADO,
-                tarifaAcordada = 45000.0,
-                notasAgencia = "Pasajeros australianos (Smith John x2). Llevar letrero en mano.",
-                detalleItinerario = "Recepción en puerta internacional y traslado vía Costanera Norte."
-            ),
-            // 5. Excursión confirmada a futuro (NO suma aún a liquidación)
-            Servicio(
-                id = "SRV-000247",
-                numeroReserva = "WHFT223488",
-                titulo = "Excursión Full Day: Cajón del Maipo & Embalse El Yeso",
-                tipo = TipoServicio.EXCURSION,
-                fecha = "2026-10-25",
-                horaInicio = "08:00",
-                horaFinEstimada = "17:00",
-                lugarPickup = "Hotel Barrio Lastarria, Santiago",
-                lugarDropOff = "Hotel Barrio Lastarria, Santiago",
-                cantidadPasajeros = 8,
-                paxTexto = "6+2",
-                driverId = "TRA-001",
-                vehiculoId = "VEH-31",
-                guiaId = null,
-                estado = EstadoServicio.CONFIRMADO,
-                tarifaAcordada = 120000.0,
-                notasAgencia = "Revisar cadenas y permisos de acceso municipal.",
-                detalleItinerario = "Salida por Camino al Volcán hacia San José de Maipo."
-            ),
-            // 6. Agenda activa de Carlos para hoy (visible en Servicios y Panel Coordinador)
-            Servicio(
-                id = "SRV-000250",
-                numeroReserva = "WHFT223510",
-                titulo = "Transfer In: Aeropuerto SCL -> Hotel Plaza San Francisco",
-                tipo = TipoServicio.TRANSFER,
-                fecha = fecha(),
-                horaInicio = "08:30",
-                horaFinEstimada = "10:00",
-                lugarPickup = "Aeropuerto Internacional Arturo Merino Benítez",
-                lugarDropOff = "Hotel Plaza San Francisco, Santiago",
-                cantidadPasajeros = 2,
-                paxTexto = "2+0",
-                driverId = "TRA-001",
-                vehiculoId = "VEH-14",
-                guiaId = null,
-                estado = EstadoServicio.ASIGNADO,
-                tarifaAcordada = 45000.0,
-                notasAgencia = "Pasajeros con equipaje de ski.",
-                detalleItinerario = "Recepción en puerta 4 y traslado por Costanera Norte."
-            ),
-            // 7. Servicio confirmado de hoy
-            Servicio(
-                id = "SRV-000251",
-                numeroReserva = "WHFT223511",
-                titulo = "Transfer Out: Hotel Cumbres -> Aeropuerto SCL",
-                tipo = TipoServicio.TRANSFER,
-                fecha = fecha(),
-                horaInicio = "10:15",
-                horaFinEstimada = "11:45",
-                lugarPickup = "Hotel Cumbres Lastarria, Santiago",
-                lugarDropOff = "Aeropuerto Internacional Arturo Merino Benítez",
-                cantidadPasajeros = 3,
-                paxTexto = "3+0",
-                driverId = "TRA-001",
-                vehiculoId = "VEH-31",
-                guiaId = null,
-                estado = EstadoServicio.CONFIRMADO,
-                tarifaAcordada = 45000.0,
-                notasAgencia = "Salida con 3 horas de anticipación.",
-                detalleItinerario = "Ruta directa por Costanera Norte."
-            ),
-            // 8. Servicio rechazado para auditoría del coordinador
-            Servicio(
-                id = "SRV-000252",
-                numeroReserva = "WHFT223512",
-                titulo = "Excursión Half Day: Valle Nevado",
-                tipo = TipoServicio.EXCURSION,
-                fecha = fecha(),
-                horaInicio = "13:00",
-                horaFinEstimada = "18:30",
-                lugarPickup = "Hotel Barrio Lastarria, Santiago",
-                lugarDropOff = "Hotel Barrio Lastarria, Santiago",
-                cantidadPasajeros = 6,
-                paxTexto = "6+0",
-                driverId = "TRA-001",
-                vehiculoId = "VEH-31",
-                guiaId = null,
-                estado = EstadoServicio.RECHAZADO,
-                tarifaAcordada = 80000.0,
-                notasAgencia = "Reasignar a otro transportista disponible.",
-                detalleItinerario = "Salida por Avenida Las Condes hacia Valle Nevado."
-            ),
-            // 9. Servicio confirmado para mañana
-            Servicio(
-                id = "SRV-000253",
-                numeroReserva = "WHFT223513",
-                titulo = "Transfer In: Aeropuerto SCL -> Hotel Sheraton",
-                tipo = TipoServicio.TRANSFER,
-                fecha = fecha(1),
-                horaInicio = "09:00",
-                horaFinEstimada = "10:30",
-                lugarPickup = "Aeropuerto Internacional Arturo Merino Benítez",
-                lugarDropOff = "Hotel Sheraton, Providencia",
-                cantidadPasajeros = 2,
-                paxTexto = "2+0",
-                driverId = "TRA-001",
-                vehiculoId = "VEH-14",
-                guiaId = null,
-                estado = EstadoServicio.CONFIRMADO,
-                tarifaAcordada = 45000.0,
-                notasAgencia = "Vuelo LATAM 411 confirmado.",
-                detalleItinerario = "Traslado directo al hotel."
-            ),
-            // 10. Servicio finalizado ayer (suma a liquidación del mes actual)
-            Servicio(
-                id = "SRV-000254",
-                numeroReserva = "WHFT223514",
-                titulo = "Transfer Out: Hotel Lastarria -> Aeropuerto SCL",
-                tipo = TipoServicio.TRANSFER,
-                fecha = fecha(-1),
-                horaInicio = "06:00",
-                horaFinEstimada = "07:30",
-                lugarPickup = "Hotel Barrio Lastarria, Santiago",
-                lugarDropOff = "Aeropuerto Internacional Arturo Merino Benítez",
-                cantidadPasajeros = 2,
-                paxTexto = "2+0",
-                driverId = "TRA-001",
-                vehiculoId = "VEH-14",
-                guiaId = null,
-                estado = EstadoServicio.FINALIZADO,
-                tarifaAcordada = 45000.0,
-                notasAgencia = "Servicio ejecutado sin observaciones.",
-                detalleItinerario = "Salida temprana por Costanera Norte."
-            ),
-            // 11. Agenda de Valentina (Guía) en Puerto Varas
-            Servicio(
-                id = "SRV-000255",
-                numeroReserva = "WHFT223515",
-                titulo = "Servicio Guiado: Ruta Patrimonial Puerto Varas",
-                tipo = TipoServicio.GUIDED_SERVICE,
-                fecha = fecha(1),
-                horaInicio = "09:00",
-                horaFinEstimada = "13:00",
-                lugarPickup = "Plaza de Armas de Puerto Varas",
-                lugarDropOff = "Costanera Vicente Pérez Rosales",
-                cantidadPasajeros = 5,
-                paxTexto = "4+1",
-                driverId = null,
-                vehiculoId = null,
-                guiaId = "GUI-012",
-                estado = EstadoServicio.ASIGNADO,
-                tarifaAcordada = 60000.0,
-                notasAgencia = "Grupo alemán. Guía debe hablar alemán.",
-                detalleItinerario = "Recorrido por iglesias patrimoniales y costanera."
-            ),
-            // 12. Servicio guiado confirmado
-            Servicio(
-                id = "SRV-000256",
-                numeroReserva = "WHFT223516",
-                titulo = "Servicio Guiado: Volcán Osorno & Petrohué",
-                tipo = TipoServicio.GUIDED_SERVICE,
-                fecha = fecha(2),
-                horaInicio = "10:30",
-                horaFinEstimada = "17:00",
-                lugarPickup = "Hotel Cumbres Puerto Varas",
-                lugarDropOff = "Hotel Cumbres Puerto Varas",
-                cantidadPasajeros = 4,
-                paxTexto = "4+0",
-                driverId = null,
-                vehiculoId = null,
-                guiaId = "GUI-012",
-                estado = EstadoServicio.CONFIRMADO,
-                tarifaAcordada = 60000.0,
-                notasAgencia = "Llevar radio de comunicación y botiquín.",
-                detalleItinerario = "Salida hacia Petrohué y mirador del volcán."
-            ),
-            // 13. Servicio finalizado hoy para Valentina (suma al sueldo del mes)
-            Servicio(
-                id = "SRV-000257",
-                numeroReserva = "WHFT223517",
-                titulo = "Servicio Guiado: Ruta Patrimonial Puerto Varas",
-                tipo = TipoServicio.GUIDED_SERVICE,
-                fecha = fecha(0),
-                horaInicio = "09:00",
-                horaFinEstimada = "13:00",
-                lugarPickup = "Plaza de Armas de Puerto Varas",
-                lugarDropOff = "Costanera Vicente Pérez Rosales",
-                cantidadPasajeros = 5,
-                paxTexto = "4+1",
-                driverId = null,
-                vehiculoId = null,
-                guiaId = "GUI-012",
-                estado = EstadoServicio.FINALIZADO,
-                tarifaAcordada = 60000.0,
-                notasAgencia = "Servicio ejecutado sin observaciones.",
-                detalleItinerario = "Recorrido patrimonial por el centro de Puerto Varas."
-            ),
-            // 14. Cancelación protegida de Valentina (suma al sueldo del mes)
-            Servicio(
-                id = "SRV-000258",
-                numeroReserva = "WHFT223518",
-                titulo = "Servicio Guiado: Volcán Osorno & Petrohué",
-                tipo = TipoServicio.GUIDED_SERVICE,
-                fecha = fecha(0),
-                horaInicio = "15:00",
-                horaFinEstimada = "19:00",
-                lugarPickup = "Hotel Cumbres Puerto Varas",
-                lugarDropOff = "Hotel Cumbres Puerto Varas",
-                cantidadPasajeros = 4,
-                paxTexto = "4+0",
-                driverId = null,
-                vehiculoId = null,
-                guiaId = "GUI-012",
-                estado = EstadoServicio.CANCELADO,
-                tarifaAcordada = 60000.0,
-                notasAgencia = "Cancelación por no-show del pasajero. Tarifa resguardada.",
-                detalleItinerario = "Salida hacia Petrohué y mirador del volcán."
-            ),
-            // 15. Cancelación protegida de Carlos (suma al sueldo del mes)
-            Servicio(
-                id = "SRV-000259",
-                numeroReserva = "WHFT223519",
-                titulo = "Transfer In: Aeropuerto SCL -> Hotel Sheraton",
-                tipo = TipoServicio.TRANSFER,
-                fecha = fecha(0),
-                horaInicio = "07:00",
-                horaFinEstimada = "08:30",
-                lugarPickup = "Aeropuerto Internacional Arturo Merino Benítez",
-                lugarDropOff = "Hotel Sheraton, Providencia",
-                cantidadPasajeros = 2,
-                paxTexto = "2+0",
-                driverId = "TRA-001",
-                vehiculoId = "VEH-14",
-                guiaId = null,
-                estado = EstadoServicio.CANCELADO,
-                tarifaAcordada = 45000.0,
-                notasAgencia = "Cancelación por no-show del pasajero. Tarifa resguardada.",
-                detalleItinerario = "Traslado directo al hotel."
-            )
-        )
-    )
+    // Caché en memoria por código de trabajador (sobrevive a cortes de red en ruta)
+    private val cachePorTrabajador = mutableMapOf<String, List<Servicio>>()
 
     override fun obtenerTodosLosServicios(): Flow<List<Servicio>> {
-        return _servicios.map { lista -> lista }
+        return combinarConEstadoCompartido(_serviciosRemotos)
     }
 
-    override fun obtenerServiciosPorTrabajador(trabajadorId: String): Flow<List<Servicio>> {
-        return _servicios.map { lista ->
-            lista.filter { it.driverId == trabajadorId || it.guiaId == trabajadorId }
-        }
+    override fun obtenerServiciosPorTrabajador(trabajadorId: String): Flow<List<Servicio>> = flow {
+        cargarServiciosRemotosDelTrabajador(trabajadorId)
+
+        emitAll(
+            combinarConEstadoCompartido(_serviciosRemotos) { servicio ->
+                servicio.driverId.equals(trabajadorId, ignoreCase = true) ||
+                        servicio.guiaId.equals(trabajadorId, ignoreCase = true)
+            }
+        )
     }
 
     override fun obtenerServiciosPorSede(driverIdsDeSede: List<String>): Flow<List<Servicio>> {
-        return _servicios.map { lista ->
-            lista.filter { it.driverId in driverIdsDeSede || it.driverId == null }
+        return combinarConEstadoCompartido(_serviciosRemotos) { servicio ->
+            servicio.driverId in driverIdsDeSede || servicio.driverId == null
         }
     }
 
     override suspend fun obtenerServicioPorId(servicioId: String): Servicio? {
-        return _servicios.value.find { it.id == servicioId }
+        val locales = runCatching {
+            coordinadorRepository.observarServiciosLocales().first()
+        }.getOrDefault(emptyList())
+
+        val todosEnMemoria = locales + _serviciosRemotos.value + cachePorTrabajador.values.flatten()
+        val encontrado = todosEnMemoria.find { it.id == servicioId } ?: return null
+
+        return aplicarOverride(encontrado, coordinadorRepository.observarCambiosEstado().value)
     }
 
     override suspend fun responderAsignacion(servicioId: String, aceptar: Boolean): Result<Unit> {
-        val servicioActual = _servicios.value.find { it.id == servicioId }
-            ?: return Result.failure(Exception("Servicio no encontrado."))
-
         val nuevoEstado = if (aceptar) EstadoServicio.CONFIRMADO else EstadoServicio.RECHAZADO
-        val servicioActualizado = servicioActual.copy(estado = nuevoEstado)
-
-        _servicios.value = _servicios.value.map {
-            if (it.id == servicioId) servicioActualizado else it
-        }
+        coordinadorRepository.registrarCambioServicio(
+            servicioId = servicioId,
+            nuevoEstado = nuevoEstado
+        )
         return Result.success(Unit)
     }
 
     override suspend fun registrarCheckIn(servicioId: String, hito: RegistroHitoGps): Result<Unit> {
-        val servicioActual = _servicios.value.find { it.id == servicioId }
-            ?: return Result.failure(Exception("Servicio no encontrado."))
-
-        val servicioActualizado = servicioActual.copy(
-            estado = EstadoServicio.EN_RUTA,
+        coordinadorRepository.registrarCambioServicio(
+            servicioId = servicioId,
+            nuevoEstado = EstadoServicio.EN_RUTA,
             checkIn = hito
         )
-
-        _servicios.value = _servicios.value.map {
-            if (it.id == servicioId) servicioActualizado else it
-        }
         return Result.success(Unit)
     }
 
     override suspend fun registrarCheckOut(servicioId: String, hito: RegistroHitoGps): Result<Unit> {
-        val servicioActual = _servicios.value.find { it.id == servicioId }
-            ?: return Result.failure(Exception("Servicio no encontrado."))
-
-        val servicioActualizado = servicioActual.copy(
-            estado = EstadoServicio.FINALIZADO,
+        coordinadorRepository.registrarCambioServicio(
+            servicioId = servicioId,
+            nuevoEstado = EstadoServicio.FINALIZADO,
             checkOut = hito
         )
-
-        _servicios.value = _servicios.value.map {
-            if (it.id == servicioId) servicioActualizado else it
-        }
         return Result.success(Unit)
+    }
+
+    private fun combinarConEstadoCompartido(
+        flujoRemoto: Flow<List<Servicio>>,
+        filtro: (Servicio) -> Boolean = { true }
+    ): Flow<List<Servicio>> {
+        return combine(
+            flujoRemoto,
+            coordinadorRepository.observarServiciosLocales(),
+            coordinadorRepository.observarCambiosEstado()
+        ) { remotos, locales, cambios ->
+            (locales + remotos)
+                .distinctBy { it.id }
+                .filter(filtro)
+                .map { aplicarOverride(it, cambios) }
+                .sortedWith(compareBy({ it.fecha }, { it.horaInicio }))
+        }
+    }
+
+    private fun aplicarOverride(
+        servicio: Servicio,
+        cambios: Map<String, ActualizacionServicioLocal>
+    ): Servicio {
+        val cambio = cambios[servicio.id] ?: return servicio
+        return servicio.copy(
+            estado = cambio.estado,
+            checkIn = cambio.checkIn ?: servicio.checkIn,
+            checkOut = cambio.checkOut ?: servicio.checkOut
+        )
+    }
+
+    private suspend fun cargarServiciosRemotosDelTrabajador(trabajadorId: String) {
+        val codigo = trabajadorId.trim().uppercase()
+
+        val resultadoRemoto = runCatching {
+            when {
+                codigo.startsWith("TRA-") -> {
+                    val idNumerico = apiService.getTransportistas(q = codigo, activo = null, pageSize = 20)
+                        .data
+                        .find { it.codigo.equals(codigo, ignoreCase = true) }
+                        ?.id
+                        ?: codigo.substringAfter("-").toIntOrNull()
+
+                    if (idNumerico != null) {
+                        apiService.getServicios(
+                            transportistaId = idNumerico,
+                            pageSize = 100
+                        ).data.map { it.toDomain() }
+                    } else {
+                        emptyList()
+                    }
+                }
+
+                codigo.startsWith("GUI-") -> {
+                    val idNumerico = apiService.getGuias(q = codigo, activo = null, pageSize = 20)
+                        .data
+                        .find { it.codigo.equals(codigo, ignoreCase = true) }
+                        ?.id
+                        ?: codigo.substringAfter("-").toIntOrNull()
+
+                    if (idNumerico != null) {
+                        apiService.getServicios(
+                            guiaId = idNumerico,
+                            pageSize = 100
+                        ).data.map { it.toDomain() }
+                    } else {
+                        emptyList()
+                    }
+                }
+
+                else -> emptyList()
+            }
+        }
+
+        resultadoRemoto.onSuccess { listaApi ->
+            // Guarda en caché de sesión y actualiza el flujo activo
+            cachePorTrabajador[codigo] = listaApi
+            _serviciosRemotos.value = listaApi
+        }.onFailure {
+            // Sin internet o API apagada: conserva la última caché en memoria o usa respaldo offline
+            val enCache = cachePorTrabajador[codigo]
+            _serviciosRemotos.value = enCache ?: generarRespaldoOffline(codigo)
+        }
+    }
+
+    private fun generarRespaldoOffline(codigo: String): List<Servicio> {
+        val hoy = LocalDate.now().toString()
+        val manana = LocalDate.now().plusDays(1).toString()
+
+        return if (codigo.startsWith("GUI-")) {
+            listOf(
+                Servicio(
+                    id = "SRV-OFF-201",
+                    numeroReserva = "WHFT-OFF-01",
+                    titulo = "Servicio Guiado: City Tour Histórico (Respaldo Offline)",
+                    tipo = TipoServicio.GUIDED_SERVICE,
+                    fecha = hoy,
+                    horaInicio = "09:30",
+                    horaFinEstimada = "13:00",
+                    lugarPickup = "Hotel Barrio Lastarria, Santiago",
+                    lugarDropOff = "Plaza de Armas, Santiago",
+                    cantidadPasajeros = 4,
+                    paxTexto = "4+0",
+                    driverId = null,
+                    vehiculoId = null,
+                    guiaId = codigo,
+                    estado = EstadoServicio.CONFIRMADO,
+                    tarifaAcordada = 60000.0,
+                    notasAgencia = "Modo respaldo local activo por falta de conexión con servidor.",
+                    detalleItinerario = "Recorrido patrimonial centro histórico."
+                )
+            )
+        } else {
+            listOf(
+                Servicio(
+                    id = "SRV-OFF-101",
+                    numeroReserva = "WHFT-OFF-02",
+                    titulo = "Transfer In: Aeropuerto SCL -> Hotel Providencia (Respaldo Offline)",
+                    tipo = TipoServicio.TRANSFER,
+                    fecha = hoy,
+                    horaInicio = "10:00",
+                    horaFinEstimada = "11:30",
+                    lugarPickup = "Aeropuerto Internacional Arturo Merino Benítez",
+                    lugarDropOff = "Hotel Sheraton, Providencia",
+                    cantidadPasajeros = 2,
+                    paxTexto = "2+0",
+                    driverId = codigo,
+                    vehiculoId = "VEH-1",
+                    guiaId = null,
+                    estado = EstadoServicio.ASIGNADO,
+                    tarifaAcordada = 45000.0,
+                    notasAgencia = "Modo respaldo local activo por falta de conexión con servidor.",
+                    detalleItinerario = "Traslado directo por Costanera Norte."
+                ),
+                Servicio(
+                    id = "SRV-OFF-102",
+                    numeroReserva = "WHFT-OFF-03",
+                    titulo = "Excursión Viña Concha y Toro (Respaldo Offline)",
+                    tipo = TipoServicio.EXCURSION,
+                    fecha = manana,
+                    horaInicio = "09:00",
+                    horaFinEstimada = "14:30",
+                    lugarPickup = "Hotel Cumbres Lastarria",
+                    lugarDropOff = "Hotel Cumbres Lastarria",
+                    cantidadPasajeros = 3,
+                    paxTexto = "3+0",
+                    driverId = codigo,
+                    vehiculoId = "VEH-1",
+                    guiaId = null,
+                    estado = EstadoServicio.CONFIRMADO,
+                    tarifaAcordada = 80000.0,
+                    notasAgencia = "Degustación incluida.",
+                    detalleItinerario = "Salida hacia Pirque y retorno."
+                )
+            )
+        }
     }
 }

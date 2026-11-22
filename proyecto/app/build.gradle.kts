@@ -1,7 +1,17 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
+
+// Lee la clave privada desde local.properties
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+val linceApiKey = localProperties.getProperty("LINCE_API_KEY") ?: ""
 
 android {
     namespace = "com.pminteractive.pmtours"
@@ -17,6 +27,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Inyecta la clave como constante en BuildConfig
+        buildConfigField("String", "LINCE_API_KEY", "\"$linceApiKey\"")
+        // URL base centralizada para Retrofit (es obligatorio que termine con "/")
+        buildConfigField("String", "LINCE_BASE_URL", "\"https://ws.southbound.travel/lince-api/\"")
     }
 
     buildTypes {
@@ -32,6 +47,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -52,10 +68,11 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
     // Dependencias de clase
-    // Conecta los ViewModels con Compose y retiene el estado ante giros de pantalla
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
-    // Gestiona la navegación y el flujo entre pantallas en una sola Activity
     implementation("androidx.navigation:navigation-compose:2.10.1")
-    // Libreria del calendario
     implementation("com.kizitonwose.calendar:compose:2.6.0")
+    // Red y consumo de API REST (Retrofit + Gson + Logs)
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 }

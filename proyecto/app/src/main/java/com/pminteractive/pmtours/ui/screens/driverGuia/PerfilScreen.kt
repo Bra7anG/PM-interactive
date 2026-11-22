@@ -1,17 +1,17 @@
 /**
- * OBJETIVO DEL SCRIPT:
- * Pantalla de perfil de usuario, resumen de liquidación mensual y ficha técnica de operador.
+- OBJETIVO DEL SCRIPT:
+- Pantalla de perfil de usuario, resumen de liquidación mensual y ficha técnica de operador.
  *
- * RESUMEN:
- * Despliega los datos personales del trabajador, la información de transferencia bancaria,
- * los activos asignados (vehículos o competencias de guía) y un dashboard visual de liquidación
- * con métricas modulares de servicios completados y tarifas resguardadas.
+- RESUMEN:
+- Despliega los datos personales del trabajador, la información de transferencia bancaria,
+- los activos asignados (vehículos o competencias de guía) y un dashboard visual de liquidación
+- con métricas modulares de servicios completados y tarifas resguardadas.
  *
- * DETALLE:
- * - Estructura los ingresos del mes mediante tarjetas de métricas estadísticas (KPIs).
- * - Distingue con claridad gráfica los servicios completados vs las cancelaciones con pago protegido.
- * - Utiliza el vector nativo 'ic_info' para notas aclaratorias sin depender de emojis.
- * - Muestra la flota habilitada si el rol es Driver o especialidades/idiomas si es Guía.
+- DETALLE:
+- - Estructura los ingresos del mes mediante tarjetas de métricas estadísticas (KPIs).
+- - Distingue con claridad gráfica los servicios completados vs las cancelaciones con pago protegido.
+- - Utiliza el vector nativo 'ic_info' para notas aclaratorias sin depender de emojis.
+- - Muestra la flota habilitada si el rol es Driver o especialidades/idiomas si es Guía.
  */
 package com.pminteractive.pmtours.ui.screens.driverGuia
 
@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource // <-- IMPORT AÑADIDO
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,6 +42,7 @@ import com.pminteractive.pmtours.model.operadores.Driver
 import com.pminteractive.pmtours.model.operadores.Guia
 import com.pminteractive.pmtours.model.operadores.Usuario
 import com.pminteractive.pmtours.ui.components.OperadorBottomBar
+import com.pminteractive.pmtours.ui.components.SelectorIdioma
 import com.pminteractive.pmtours.ui.navigation.Screen
 import com.pminteractive.pmtours.ui.theme.*
 import com.pminteractive.pmtours.viewmodel.ServicioViewModel
@@ -117,12 +119,16 @@ fun PerfilScreen(
                         modifier = Modifier.testTag("perfil_nombre")
                     )
                     Text(
-                        text = "${usuario?.rol?.name ?: "DRIVER"} · Base ${usuario?.sede?.nombreCiudad ?: "Santiago"}",
+                        text = stringResource(
+                            id = R.string.perfil_rol_base,
+                            usuario?.rol?.name ?: "DRIVER",
+                            usuario?.sede?.nombreCiudad ?: "Santiago"
+                        ),
                         color = LinceTextSecondary,
                         fontSize = 13.sp
                     )
                     Text(
-                        text = "RUT: ${usuario?.rut ?: "18.452.123-K"}",
+                        text = stringResource(id = R.string.perfil_rut, usuario?.rut ?: "18.452.123-K"),
                         color = LinceTextSecondary,
                         fontSize = 12.sp,
                         modifier = Modifier.testTag("perfil_rut")
@@ -151,7 +157,7 @@ fun PerfilScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Sueldo del mes",
+                            text = stringResource(id = R.string.perfil_sueldo_mes),
                             color = LinceCyan,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
@@ -164,7 +170,7 @@ fun PerfilScreen(
                             )
                         ) {
                             Text(
-                                text = resumenLiquidacion.nombreMes.ifEmpty { "Mes actual" },
+                                text = resumenLiquidacion.nombreMes.ifEmpty { stringResource(id = R.string.perfil_mes_actual) },
                                 color = LinceTextPrimary,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
@@ -211,13 +217,13 @@ fun PerfilScreen(
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "Finalizados",
+                                    text = stringResource(id = R.string.perfil_kpi_finalizados),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = LinceTextPrimary
                                 )
                                 Text(
-                                    text = "Completados con éxito",
+                                    text = stringResource(id = R.string.perfil_kpi_finalizados_desc),
                                     fontSize = 10.sp,
                                     color = LinceTextSecondary
                                 )
@@ -245,13 +251,13 @@ fun PerfilScreen(
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "Tarifa protegida",
+                                    text = stringResource(id = R.string.perfil_kpi_protegida),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = LinceTextPrimary
                                 )
                                 Text(
-                                    text = "No-show / Cliente",
+                                    text = stringResource(id = R.string.perfil_kpi_protegida_desc),
                                     fontSize = 10.sp,
                                     color = LinceTextSecondary
                                 )
@@ -276,7 +282,7 @@ fun PerfilScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Sueldo del mes: incluye servicios con Check-Out completado y tarifas resguardadas por la agencia.",
+                            text = stringResource(id = R.string.perfil_sueldo_nota),
                             color = LinceTextSecondary,
                             fontSize = 11.sp,
                             lineHeight = 15.sp
@@ -299,7 +305,7 @@ fun PerfilScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Datos de Transferencia Bancaria",
+                        text = stringResource(id = R.string.perfil_datos_bancarios),
                         color = LinceCyan,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
@@ -312,12 +318,12 @@ fun PerfilScreen(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = "N°: ${datosBancarios?.numeroCuenta ?: "18452123"}",
+                        text = stringResource(id = R.string.perfil_cuenta_num, datosBancarios?.numeroCuenta ?: "18452123"),
                         color = LinceTextSecondary,
                         fontSize = 13.sp
                     )
                     Text(
-                        text = "Titular: ${datosBancarios?.titular ?: "Carlos Morales"}",
+                        text = stringResource(id = R.string.perfil_cuenta_titular, datosBancarios?.titular ?: "Carlos Morales"),
                         color = LinceTextSecondary,
                         fontSize = 12.sp
                     )
@@ -339,7 +345,7 @@ fun PerfilScreen(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = "Flota de Vehículos Habilitada",
+                                text = stringResource(id = R.string.perfil_flota_titulo),
                                 color = LinceCyan,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
@@ -359,7 +365,11 @@ fun PerfilScreen(
                                     fontSize = 14.sp
                                 )
                                 Text(
-                                    text = "Patente: ${vehiculo.patente} · Capacidad: ${vehiculo.capacidadPasajeros} pasajeros",
+                                    text = stringResource(
+                                        id = R.string.perfil_vehiculo_detalle,
+                                        vehiculo.patente,
+                                        vehiculo.capacidadPasajeros
+                                    ),
                                     color = LinceTextSecondary,
                                     fontSize = 12.sp
                                 )
@@ -378,21 +388,21 @@ fun PerfilScreen(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = "Competencias e Idiomas",
+                                text = stringResource(id = R.string.perfil_competencias_titulo),
                                 color = LinceCyan,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Idiomas: ${usuario.idiomas.joinToString(", ")}",
+                                text = stringResource(id = R.string.perfil_idiomas, usuario.idiomas.joinToString(", ")),
                                 color = LinceTextPrimary,
                                 fontSize = 14.sp
                             )
                             if (usuario.especialidades.isNotEmpty()) {
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "Especialidades: ${usuario.especialidades.joinToString(" · ")}",
+                                    text = stringResource(id = R.string.perfil_especialidades, usuario.especialidades.joinToString(" · ")),
                                     color = LinceTextSecondary,
                                     fontSize = 12.sp
                                 )
@@ -404,6 +414,13 @@ fun PerfilScreen(
             }
 
             Spacer(modifier = Modifier.height(30.dp))
+
+            // ==========================================
+            // COMPONENTE DE SELECCIÓN DE IDIOMA
+            // ==========================================
+            SelectorIdioma()
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             // 5. Botón de Cerrar Sesión
             OutlinedButton(
@@ -419,7 +436,7 @@ fun PerfilScreen(
                     .testTag("btn_cerrar_sesion")
             ) {
                 Text(
-                    text = "Cerrar Sesión Institucional",
+                    text = stringResource(id = R.string.btn_cerrar_sesion), // Ya lo teníamos del paso anterior
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
                 )

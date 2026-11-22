@@ -1,3 +1,480 @@
 <resources>
+    <!-- ============================================== -->
+    <!-- CONFIGURACIÓN GLOBAL -->
+    <!-- ============================================== -->
     <string name="app_name">PM TOURS</string>
+    <string name="idioma_titulo">Idioma / Language</string>
+    <string name="btn_cerrar_sesion">Cerrar Sesión Institucional</string>
+
+    <!-- ============================================== -->
+    <!-- PANTALLA LOGIN (LoginScreen) -->
+    <!-- ============================================== -->
+    <string name="login_subtitulo">Servicios turísticos Southbound</string>
+
+    <!-- Estados del Servidor -->
+    <string name="login_estado_verificando">Verificando servidor...</string>
+    <string name="login_estado_en_linea">Servidor en línea</string>
+    <string name="login_estado_sin_internet">Sin internet · Datos locales</string>
+    <string name="login_estado_caido">Servidor no disponible · Modo respaldo</string>
+
+    <!-- Inputs del Formulario -->
+    <string name="login_label_usuario">Usuario o Código</string>
+    <string name="login_hint_usuario">Ej: driver, TRA-021 o usuario@pmtours.cl</string>
+    <string name="login_error_usuario">Ingrese un usuario, código (TRA/GUI) o correo válido</string>
+
+    <string name="login_label_clave">Contraseña</string>
+    <string name="login_hint_clave">••••••••</string>
+    <string name="login_error_clave">Contraseña incorrecta</string>
+
+    <string name="login_boton_ingresar">Ingresar</string>
+
+    <!-- ============================================== -->
+    <!-- PANTALLA PERFIL (Driver/Guía) -->
+    <!-- ============================================== -->
+    <!-- Datos de usuario (Usa %1$s para insertar variables de texto) -->
+    <string name="perfil_rol_base">%1$s · Base %2$s</string>
+    <string name="perfil_rut">RUT: %1$s</string>
+
+    <!-- Liquidación Mensual -->
+    <string name="perfil_sueldo_mes">Sueldo del mes</string>
+    <string name="perfil_mes_actual">Mes actual</string>
+    <string name="perfil_kpi_finalizados">Finalizados</string>
+    <string name="perfil_kpi_finalizados_desc">Completados con éxito</string>
+    <string name="perfil_kpi_protegida">Tarifa protegida</string>
+    <string name="perfil_kpi_protegida_desc">No-show / Cliente</string>
+    <string name="perfil_sueldo_nota">Sueldo del mes: incluye servicios con Check-Out completado y tarifas resguardadas por la agencia.</string>
+
+    <!-- Banco y Activos -->
+    <string name="perfil_datos_bancarios">Datos de Transferencia Bancaria</string>
+    <string name="perfil_cuenta_num">N°: %1$s</string>
+    <string name="perfil_cuenta_titular">Titular: %1$s</string>
+
+    <!-- Vehículos -->
+    <string name="perfil_flota_titulo">Flota de Vehículos Habilitada</string>
+    <string name="perfil_vehiculo_detalle">Patente: %1$s · Capacidad: %2$d pasajeros</string>
+
+    <!-- Idiomas -->
+    <string name="perfil_competencias_titulo">Competencias e Idiomas</string>
+    <string name="perfil_idiomas">Idiomas: %1$s</string>
+    <string name="perfil_especialidades">Especialidades: %1$s</string>
+
+    <!-- ============================================== -->
+    <!-- PANTALLA SERVICIOS (Driver / Guía)(Hoja de Ruta) -->
+    <!-- ============================================== -->
+    <string name="servicios_titulo">Hoja de Ruta</string>
+    <string name="servicios_saludo">Hola, %1$s</string>
+
+    <string name="servicios_busqueda_hint">Buscar hotel, destino o reserva...</string>
+    <string name="servicios_sin_conexion">Sin conexión · Datos locales</string>
+
+    <!-- Fechas dinámicas -->
+    <string name="servicios_mes_actual_fallback">este mes</string>
+    <string name="servicios_fecha_hoy">Hoy · %1$s</string>
+    <string name="servicios_fecha_manana">Mañana · %1$s</string>
+
+    <!-- Filtros de Estado -->
+    <string name="filtro_todos">Todos</string>
+    <string name="filtro_pendientes">Pendientes</string>
+    <string name="filtro_confirmados">Confirmados</string>
+    <string name="filtro_en_ruta">En ruta</string>
+    <string name="filtro_finalizados">Finalizados</string>
+    <string name="filtro_cancelados">Cancelados</string>
+
+    <!-- Banners y Vacio -->
+    <string name="servicios_banner_finalizados">Mostrando servicios finalizados de %1$s (%2$d completados)</string>
+    <string name="servicios_banner_cancelados">Servicios cancelados (%1$d · tarifa resguardada según política)</string>
+    <string name="servicios_lista_vacia">No se encontraron servicios asignados para esta fecha y filtro.</string>
+
+    <!-- Calendario Lince -->
+    <string name="calendario_btn_cancelar">Cancelar</string>
+
+    <!-- ============================================== -->
+    <!-- PANTALLA CALENDARIO (Driver / Guía) -->
+    <!-- ============================================== -->
+    <string name="calendario_titulo">Mi disponibilidad</string>
+    <string name="calendario_subtitulo">%1$s · %2$s</string>
+
+    <!-- Leyendas -->
+    <string name="calendario_leyenda_servicio">Con servicio</string>
+    <string name="calendario_leyenda_bloqueado">Bloqueado</string>
+
+    <!-- Gestión de turnos -->
+    <string name="calendario_dia_libre">Día marcado como libre</string>
+    <string name="calendario_dia_disponible">Día disponible</string>
+    <string name="calendario_prompt_tocar">Toca un día del calendario para gestionar tu turno</string>
+
+    <!-- Advertencias (Errores de bloqueo) -->
+    <string name="calendario_error_servicio">No puedes bloquear este día: ya tienes un servicio asignado.</string>
+    <string name="calendario_error_pasado">No puedes bloquear una fecha que ya pasó.</string>
+    <string name="calendario_error_anticipacion">Los días libres deben solicitarse con al menos 1 semana de anticipación.</string>
+
+    <!-- Próximos días bloqueados -->
+    <string name="calendario_bloqueos_titulo">Próximos días bloqueados</string>
+    <string name="calendario_bloqueos_vacio">No tienes días libres bloqueados próximamente.</string>
+    <string name="calendario_etiqueta_dia_libre">Día libre</string>
+
+    <!-- ============================================== -->
+    <!-- PANTALLA DETALLE DE SERVICIO (Driver / Guía) -->
+    <!-- ============================================== -->
+    <string name="detalle_no_encontrado">Servicio no encontrado</string>
+    <string name="detalle_titulo">Detalle del servicio</string>
+
+    <!-- Pasajeros (Pluralización básica) -->
+    <string name="detalle_pax_full">%1$d personas (%2$d adultos, %3$d niños)</string>
+    <string name="detalle_pax_adultos">%1$d adultos</string>
+    <string name="detalle_pax_general">%1$d pasajeros</string>
+
+    <!-- Ficha de Datos Generales -->
+    <string name="detalle_ficha_reserva">N° Reserva</string>
+    <string name="detalle_ficha_fecha">Fecha</string>
+    <string name="detalle_ficha_hora">Hora de salida</string>
+    <string name="detalle_ficha_hora_formato">%1$s - %2$s hrs</string>
+    <string name="detalle_ficha_tipo">Tipo de servicio</string>
+    <string name="detalle_ficha_pax">Pasajeros</string>
+    <string name="detalle_ficha_tarifa">Tarifa acordada</string>
+
+    <!-- Puntos de Ruta -->
+    <string name="detalle_ruta_titulo">Puntos de Ruta</string>
+    <string name="detalle_ruta_pickup">Lugar de Recogida (Pickup)</string>
+    <string name="detalle_ruta_dropoff">Lugar de Destino</string>
+    <string name="detalle_btn_mapa">Ver en el mapa</string>
+
+    <!-- Observaciones -->
+    <string name="detalle_obs_titulo">Observaciones de Agencia</string>
+    <string name="detalle_obs_vacia">Sin notas adicionales.</string>
+
+    <!-- Check-in Status -->
+    <string name="detalle_checkin_ok">Check-in registrado a tiempo (+15 min de anticipación)</string>
+    <string name="detalle_checkin_tarde">Check-in registrado fuera del plazo de anticipación</string>
+
+    <!-- Botones Operativos y Mensajes de Estado -->
+    <string name="detalle_btn_confirmar_recepcion">Confirmar Recepción del Servicio</string>
+    <string name="detalle_contacto_coordinacion">¿Tienes un inconveniente? Contactar a Coordinación</string>
+
+    <string name="detalle_btn_iniciar_checkin">Iniciar Servicio (Check-In GPS)</string>
+    <string name="detalle_lock_checkin_titulo">Check-in programado</string>
+    <string name="detalle_lock_checkin_desc">Se habilitará el día del servicio (%1$s).</string>
+
+    <string name="detalle_btn_finalizar_checkout">Finalizar Servicio (Check-Out)</string>
+
+    <string name="detalle_estado_finalizado">Servicio completado exitosamente</string>
+    <string name="detalle_estado_cancelado">Servicio cancelado por coordinación o cliente (Tarifa resguardada)</string>
+
+    <!-- ============================================== -->
+    <!-- COMPONENTE: TARJETA DE SERVICIO DRIVER GUIA-->
+    <!-- ============================================== -->
+    <!-- Tipos de Servicio -->
+    <string name="servicio_tipo_transfer">TRANSFER</string>
+    <string name="servicio_tipo_guiado">SERVICIO GUIADO</string>
+    <string name="servicio_tipo_excursion">EXCURSIÓN</string>
+
+    <!-- Subtítulo de Ruta -->
+    <string name="servicio_pax_abreviado">%1$s pax</string>
+
+    <!-- Estados de Servicio -->
+    <string name="estado_asignado">PENDIENTE</string>
+    <string name="estado_confirmado">CONFIRMADO</string>
+    <string name="estado_en_ruta">EN RUTA</string>
+    <string name="estado_finalizado">FINALIZADO</string>
+    <string name="estado_cancelado">CANCELADO</string>
+    <string name="estado_desconocido">DESCONOCIDO</string>
+    <string name="estado_rechazado">RECHAZADO</string>
+
+    <!-- ============================================== -->
+    <!-- COMPONENTE: OPERADOR BOTTOM BAR -->
+    <!-- ============================================== -->
+    <string name="nav_operador_servicios">Servicios</string>
+    <string name="nav_operador_calendario">Calendario</string>
+    <string name="nav_operador_perfil">Perfil</string>
+
+    <!-- ============================================== -->
+    <!-- PANTALLA CREAR ADMIN (Administrador) -->
+    <!-- ============================================== -->
+    <string name="admin_tab_servicio">Crear Servicio</string>
+    <string name="admin_tab_usuario">Crear Usuario</string>
+
+    <string name="admin_form_titulo">Nueva Cuenta Local</string>
+    <string name="admin_form_desc">Los usuarios creados aquí solo existirán en la memoria de este dispositivo (sin sincronización con el servidor Lince).</string>
+    <string name="admin_form_nombre">Nombre Completo</string>
+    <string name="admin_form_rol">Rol Operativo</string>
+    <string name="admin_form_sede">Sede Base</string>
+
+    <string name="admin_form_error_general">Error al crear usuario</string>
+    <string name="admin_form_error_nombre">El nombre es obligatorio</string>
+    <string name="admin_form_btn_registrar">Registrar Usuario Local</string>
+
+    <!-- ============================================== -->
+    <!-- PANTALLA PANEL (Administrador) -->
+    <!-- ============================================== -->
+    <!-- Cabecera -->
+    <string name="admin_panel_fecha_fallback">Hoy</string>
+    <string name="admin_panel_titulo">Personal Operativo</string>
+    <string name="admin_panel_btn_reporte">Reporte</string>
+    <string name="admin_panel_compartir">Compartir Reporte</string>
+
+    <!-- Filtros Dropdown -->
+    <string name="admin_filtro_roles_todos">Todos los roles</string>
+    <string name="admin_filtro_roles_drivers">Drivers (%1$d)</string>
+    <string name="admin_filtro_roles_guias">Guías (%1$d)</string>
+    <string name="admin_filtro_roles_staff">Staff (%1$d)</string>
+    <string name="admin_filtro_sedes_todas">Todas las sedes</string>
+
+    <!-- Etiquetas (Badges) de Roles en la lista -->
+    <string name="admin_badge_admin">Admin</string>
+    <string name="admin_badge_coord">Coordinador</string>
+    <string name="admin_badge_driver">Driver</string>
+    <string name="admin_badge_guia">Guía</string>
+
+    <!-- ============================================== -->
+    <!-- PANTALLA PERFIL (Administrador) -->
+    <!-- ============================================== -->
+    <string name="admin_perfil_nombre_fallback">Administrador</string>
+    <string name="admin_perfil_rol_base">%1$s · Base %2$s</string>
+    <string name="admin_perfil_nivel_acceso">Nivel de acceso: %1$s</string>
+
+    <string name="admin_perfil_resumen_titulo">Resumen del sistema</string>
+    <string name="admin_perfil_metrica_usuarios">Usuarios</string>
+    <string name="admin_perfil_metrica_drivers">Drivers</string>
+    <string name="admin_perfil_metrica_guias">Guías</string>
+
+    <string name="admin_perfil_contacto_titulo">Datos de contacto</string>
+    <string name="admin_perfil_contacto_correo">Correo: %1$s</string>
+    <string name="admin_perfil_contacto_telefono">Teléfono: %1$s</string>
+    <string name="admin_perfil_contacto_direccion">Dirección: %1$s</string>
+
+    <!-- ============================================== -->
+    <!-- PANTALLA CREAR SERVICIO (Coordinador) -->
+    <!-- ============================================== -->
+    <string name="crear_btn_aceptar">Aceptar</string>
+    <string name="crear_btn_cancelar">Cancelar</string>
+
+    <string name="crear_titulo">Crear Servicio</string>
+    <string name="crear_subtitulo">Asignación operativa · %1$s</string>
+    <string name="crear_rol_coordinador_fallback">Coordinador</string>
+
+    <!-- Sección 1 -->
+    <string name="crear_sec1_titulo">1. Sede y Tipo de Servicio</string>
+    <string name="crear_sec1_sede">Sede operativa</string>
+    <string name="crear_sec1_modalidad">Modalidad del servicio</string>
+    <string name="crear_tipo_transfer">Transfer</string>
+    <string name="crear_tipo_excursion">Excursión</string>
+    <string name="crear_tipo_guiado">Guiado</string>
+
+    <!-- Sección 2 -->
+    <string name="crear_sec2_titulo">2. Reserva y Cliente</string>
+    <string name="crear_sec2_reserva">Código de Reserva *</string>
+    <string name="crear_sec2_reserva_hint">Ej: WHFT223423</string>
+    <string name="crear_sec2_desc">Título o Descripción *</string>
+    <string name="crear_sec2_desc_hint">Ej: Transfer IN Aeropuerto SCL - Hotel</string>
+    <string name="crear_sec2_cliente">Agencia / Cliente (Opcional)</string>
+    <string name="crear_sec2_cliente_cargando">Cargando clientes...</string>
+    <string name="crear_sec2_cliente_seleccionar">Seleccionar cliente...</string>
+    <string name="crear_sec2_cliente_formato">%1$s (%2$s)</string>
+    <string name="crear_sec2_cliente_vacio">Sin cliente específico</string>
+
+    <!-- Sección 3 -->
+    <string name="crear_sec3_titulo">3. Fecha, Horario y Ruta</string>
+    <string name="crear_sec3_fecha">Fecha del servicio *</string>
+    <string name="crear_sec3_hora_inicio">Hora Pickup *</string>
+    <string name="crear_sec3_hora_fin">Hora Fin Est.</string>
+    <string name="crear_sec3_pickup">Punto de Origen (Pickup) *</string>
+    <string name="crear_sec3_pickup_hint">Ej: Aeropuerto Arturo Merino Benítez</string>
+    <string name="crear_sec3_dropoff">Punto de Destino (Drop-off) *</string>
+    <string name="crear_sec3_dropoff_hint">Ej: Hotel Mandarin Oriental, Las Condes</string>
+    <string name="crear_fecha_hoy">Hoy · %1$s</string>
+    <string name="crear_fecha_manana">Mañana · %1$s</string>
+
+    <!-- Sección 4 -->
+    <string name="crear_sec4_titulo">4. Pasajeros (PAX)</string>
+    <string name="crear_sec4_adultos">Adultos</string>
+    <string name="crear_sec4_ninos">Niños</string>
+    <string name="crear_sec4_total">Total: %1$d pasajeros (%2$d+%3$d)</string>
+
+    <!-- Sección 5 -->
+    <string name="crear_sec5_titulo">5. Asignación de Personal</string>
+    <string name="crear_sec5_cargando">Cargando staff y disponibilidad...</string>
+
+    <string name="crear_sec5_transp_etiqueta">Transportista (%1$s) *</string>
+    <string name="crear_sec5_transp_seleccionar">Seleccionar transportista...</string>
+    <string name="crear_sec5_transp_bloqueado_aviso"> · 🚫 Bloqueado</string>
+    <string name="crear_sec5_transp_opcion_bloqueado">%1$s (%2$s) · 🚫 Día bloqueado</string>
+    <string name="crear_sec5_transp_opcion_viajes">%1$s (%2$s) · %3$d veh. (Con viajes)</string>
+    <string name="crear_sec5_transp_opcion_libre">%1$s (%2$s) · %3$d veh.</string>
+    <string name="crear_sec5_error_bloqueo_transp">Este transportista tiene bloqueado el día seleccionado en su calendario.</string>
+
+    <string name="crear_sec5_vehiculo_etiqueta">Vehículo de Flota *</string>
+    <string name="crear_sec5_vehiculo_opcion">%1$s · %2$s (Cap. %3$d pax)</string>
+    <string name="crear_sec5_vehiculo_requiere_transp">Primero selecciona un transportista</string>
+    <string name="crear_sec5_vehiculo_seleccionar">Seleccionar vehículo...</string>
+
+    <string name="crear_sec5_idioma_etiqueta">Idioma Requerido (Filtro)</string>
+    <string name="crear_sec5_idioma_todos">Todos los idiomas</string>
+
+    <string name="crear_sec5_guia_etiqueta">Guía Turístico (%1$s) *</string>
+    <string name="crear_sec5_guia_seleccionar">Seleccionar guía (%1$d disp.)...</string>
+    <string name="crear_sec5_guia_opcion_bloqueado">%1$s · 🚫 Día bloqueado</string>
+    <string name="crear_sec5_guia_opcion_viajes">%1$s · %2$s (Con viajes)</string>
+    <string name="crear_sec5_guia_opcion_libre">%1$s · %2$s</string>
+    <string name="crear_sec5_error_bloqueo_guia">Este guía tiene bloqueado el día seleccionado en su calendario.</string>
+
+    <!-- Sección 6 & Botón -->
+    <string name="crear_sec6_titulo">6. Notas Operativas (Opcional)</string>
+    <string name="crear_sec6_notas">Instrucciones para el operador</string>
+    <string name="crear_sec6_notas_hint">Ej: Vuelo LA501, cartel con nombre del pasajero...</string>
+    <string name="crear_btn_guardar">Crear y Asignar Servicio</string>
+
+    <!-- ============================================== -->
+    <!-- PANTALLA PANEL (Coordinador) -->
+    <!-- ============================================== -->
+    <string name="coord_panel_titulo_admin">Servicios Operativos</string>
+    <string name="coord_panel_titulo_coord">Coordinación</string>
+    <string name="coord_panel_usuario_fallback">Operaciones PM Tours</string>
+    <string name="coord_panel_sin_conexion">Sin conexión · Datos locales</string>
+    <string name="coord_panel_btn_actualizar">Actualizar</string>
+
+    <!-- Filtros y Búsqueda -->
+    <string name="coord_filtro_estado_todos">Todos</string>
+    <string name="coord_filtro_estado_pendientes">Pendientes</string>
+    <string name="coord_filtro_estado_confirmados">Confirmados</string>
+    <string name="coord_filtro_estado_rechazados">Rechazados</string>
+    <string name="coord_filtro_estado_cancelados">Cancelados</string>
+    <string name="coord_filtro_estado_en_ruta">En ruta</string>
+    <string name="coord_filtro_estado_finalizados">Finalizados</string>
+    <string name="coord_filtro_estado_formato">%1$s (%2$d)</string>
+
+    <string name="coord_orden_evaluacion">★ Mejor evaluación</string>
+    <string name="coord_orden_nombre">Nombre (A-Z)</string>
+
+    <string name="coord_busqueda_transp_hint">Buscar transportista por nombre o código...</string>
+    <string name="coord_busqueda_guia_hint">Buscar guía por nombre o código...</string>
+    <string name="coord_busqueda_limpiar">Limpiar</string>
+    <string name="coord_orden_disponibles_formato">%1$d disponibles</string>
+    <string name="coord_orden_etiqueta_formato">Orden: %1$s</string>
+
+    <!-- Fechas -->
+    <string name="coord_fecha_hoy">Hoy · %1$s</string>
+    <string name="coord_fecha_manana">Mañana · %1$s</string>
+
+    <!-- Mensajes de Error / Vacío -->
+    <string name="coord_error_conexion_fallback">Error de conexión</string>
+    <string name="coord_error_btn_reintentar">Reintentar</string>
+    <string name="coord_vacio_servicios">No hay servicios en esta categoría para %1$s.</string>
+    <string name="coord_vacio_transp">No se encontraron transportistas en %1$s.</string>
+    <string name="coord_vacio_guias">No se encontraron guías en %1$s.</string>
+
+    <!-- Bottom Sheet Detalle Servicio -->
+    <string name="coord_sheet_tipo_transfer">Transfer</string>
+    <string name="coord_sheet_tipo_guiado">Servicio Guiado</string>
+    <string name="coord_sheet_tipo_excursion">Excursión</string>
+
+    <string name="coord_sheet_fecha_hora">Fecha y Horario</string>
+    <string name="coord_sheet_fecha_hora_formato">%1$s · %2$s a %3$s</string>
+    <string name="coord_sheet_pickup">Origen (Pickup)</string>
+    <string name="coord_sheet_dropoff">Destino (Drop-off)</string>
+    <string name="coord_sheet_pax">Pasajeros</string>
+    <string name="coord_sheet_pax_formato">%1$d PAX (%2$s)</string>
+
+    <string name="coord_sheet_transp_guia_etiqueta">Transportista</string>
+    <string name="coord_sheet_transp_guia_alt">Guía</string>
+    <string name="coord_sheet_transp_guia_vacio">Sin asignar</string>
+    <string name="coord_sheet_vehiculo">Vehículo asignado</string>
+
+    <string name="coord_sheet_notas_titulo">Notas e Itinerario</string>
+    <string name="coord_sheet_trazabilidad_titulo">Trazabilidad Operativa</string>
+    <string name="coord_sheet_checkin_formato">Check-in registrado a las %1$s</string>
+    <string name="coord_sheet_checkout_formato">Check-out finalizado a las %1$s</string>
+
+    <string name="coord_sheet_btn_cancelar_servicio">Cancelar Servicio</string>
+    <string name="coord_sheet_btn_volver">Volver</string>
+    <string name="coord_sheet_btn_confirmar_cancel">Confirmar Cancelación</string>
+
+    <!-- Tarjetas Trabajadores -->
+    <string name="coord_tarjeta_base_formato">%1$s · Base %2$s</string>
+    <string name="coord_tarjeta_vehiculo_formato">• %1$s (%2$s) · Cap. %3$d pax</string>
+    <string name="coord_tarjeta_idiomas">Idiomas: %1$s</string>
+
+    <!-- ============================================== -->
+    <!-- PANTALLA PERFIL (Coordinador) -->
+    <!-- ============================================== -->
+    <!-- Cabecera -->
+    <string name="coord_perfil_nombre_fallback">Coordinador</string>
+    <string name="coord_perfil_rol_base">Coordinador de Operaciones · Base %1$s</string>
+    <string name="coord_perfil_id">ID: %1$s</string>
+    <string name="coord_perfil_id_fallback">CRD-201</string>
+
+    <!-- Tarjeta de Alcance Operativo -->
+    <string name="coord_perfil_alcance_titulo">Alcance operativo</string>
+    <string name="coord_perfil_alcance_sede">Sede principal</string>
+    <string name="coord_perfil_alcance_sede_valor">%1$s (%2$s)</string>
+    <string name="coord_perfil_alcance_cobertura_titulo">Cobertura de red</string>
+    <string name="coord_perfil_alcance_cobertura_valor">Santiago, Puerto Varas y Punta Arenas</string>
+    <string name="coord_perfil_alcance_rol_titulo">Atribuciones del rol</string>
+    <string name="coord_perfil_alcance_rol_valor">Creación y asignación de servicios, supervisión de flota/guías y cancelación operativa</string>
+    <string name="coord_perfil_alcance_sync_titulo">Sincronización</string>
+    <string name="coord_perfil_alcance_sync_valor">Conectado a Lince API · Southbound</string>
+
+    <!-- Datos Institucionales -->
+    <string name="coord_perfil_contacto_titulo">Contacto institucional</string>
+    <string name="coord_perfil_contacto_correo">Correo</string>
+    <string name="coord_perfil_contacto_telefono">Teléfono</string>
+    <string name="coord_perfil_contacto_oficina">Oficina</string>
+
+    <!-- ============================================== -->
+    <!-- COMPONENTE: ADMIN BOTTOM BAR -->
+    <!-- ============================================== -->
+    <string name="nav_admin_usuarios">Usuarios</string>
+    <string name="nav_admin_servicios">Servicios</string>
+    <string name="nav_admin_crear">Crear</string>
+    <string name="nav_admin_perfil">Perfil</string>
+
+    <!-- ============================================== -->
+    <!-- COMPONENTE: COORDINADOR BOTTOM BAR -->
+    <!-- ============================================== -->
+    <string name="nav_coord_inicio">Inicio</string>
+    <string name="nav_coord_crear_desc">Crear servicio</string>
+    <string name="nav_coord_crear">Crear</string>
+    <string name="nav_coord_perfil">Perfil</string>
+
+    <!-- ============================================== -->
+    <!-- COMPONENTE: TARJETA SERVICIO (Coordinador) -->
+    <!-- ============================================== -->
+    <string name="coord_card_local">LOCAL</string>
+    <string name="coord_card_driver">Driver: %1$s</string>
+    <string name="coord_card_guia">Guía: %1$s</string>
+    <string name="coord_card_sin_asignar">Sin asignar</string>
+
+    <!-- ============================================== -->
+    <!-- VIEWMODEL: AUTH & LOGIN -->
+    <!-- ============================================== -->
+    <string name="login_error_campos_vacios">Debe ingresar usuario y contraseña.</string>
+    <string name="login_error_autenticacion">Error al autenticar. Verifique sus credenciales.</string>
+
+    <!-- ============================================== -->
+    <!-- VIEWMODEL: COORDINADOR -->
+    <!-- ============================================== -->
+    <string name="coord_error_cargar_servicios">No se pudieron cargar los servicios.</string>
+    <string name="coord_error_cargar_transportistas">No se pudieron cargar los transportistas.</string>
+    <string name="coord_error_cargar_guias">No se pudieron cargar los guías.</string>
+
+    <!-- ============================================== -->
+    <!-- VIEWMODEL: CREAR SERVICIO -->
+    <!-- ============================================== -->
+    <string name="crear_error_reserva">Ingresa el número de reserva.</string>
+    <string name="crear_error_titulo">Ingresa el título o descripción del servicio.</string>
+    <string name="crear_error_puntos">Completa los puntos de pickup y destino.</string>
+    <string name="crear_error_hora">La hora de inicio debe tener formato HH:mm (ej. 09:30).</string>
+    <string name="crear_error_transp">Selecciona un transportista de %1$s.</string>
+    <string name="crear_error_vehiculo">Selecciona un vehículo de la flota del transportista.</string>
+    <string name="crear_error_guia">Selecciona un guía turístico de %1$s.</string>
+    <string name="crear_error_bloqueo">%1$s tiene bloqueado el %2$s. Elige otro operador o cambia la fecha.</string>
+    <string name="crear_error_guardar">Error al guardar el servicio.</string>
+    <string name="crear_error_catalogos">No se pudieron cargar algunos catálogos desde la API.</string>
+
+    <!-- Detalle extra para el itinerario (no visibles como error pero son data) -->
+    <string name="crear_extra_cliente">Cliente: %1$s</string>
+    <string name="crear_extra_idioma">Idioma: %1$s</string>
+    <string name="crear_extra_driver">Driver: %1$s</string>
+    <string name="crear_extra_vehiculo">Vehículo: %1$s (%2$s)</string>
+    <string name="crear_extra_guia">Guía: %1$s</string>
+
 </resources>

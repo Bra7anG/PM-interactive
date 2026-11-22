@@ -1,18 +1,18 @@
 /**
- * OBJETIVO DEL SCRIPT:
- * Pantalla de visualización detallada y gestión operativa de un servicio turístico para Driver o Guía.
+- OBJETIVO DEL SCRIPT:
+- Pantalla de visualización detallada y gestión operativa de un servicio turístico para Driver o Guía.
  *
- * RESUMEN:
- * Renderiza la ficha técnica completa del servicio con lenguaje accesible,
- * ilustración gráfica de la ruta en Canvas, apertura de navegación externa con botones
- * anchos e íconos vectoriales, y validación estricta de Check-in para el mismo día del servicio
- * incorporando indicador visual de bloqueo mediante vector nativo.
+- RESUMEN:
+- Renderiza la ficha técnica completa del servicio con lenguaje accesible,
+- ilustración gráfica de la ruta en Canvas, apertura de navegación externa con botones
+- anchos e íconos vectoriales, y validación estricta de Check-in para el mismo día del servicio
+- incorporando indicador visual de bloqueo mediante vector nativo.
  *
- * DETALLE:
- * - Refleja la transición de asignación (statusPL "RQ" a "CF") mediante el botón de confirmación de recepción.
- * - Traduce la nomenclatura técnica de pasajeros ('paxTexto') a español legible (adultos y niños).
- * - Utiliza Vector Drawables nativos ('ic_location_pin', 'ic_map' e 'ic_lock') para la iconografía.
- * - Restringe la activación del Check-in únicamente a la fecha en curso, mostrando tarjeta informativa con candado si es a futuro.
+- DETALLE:
+- - Refleja la transición de asignación (statusPL "RQ" a "CF") mediante el botón de confirmación de recepción.
+- - Traduce la nomenclatura técnica de pasajeros ('paxTexto') a español legible (adultos y niños).
+- - Utiliza Vector Drawables nativos ('ic_location_pin', 'ic_map' e 'ic_lock') para la iconografía.
+- - Restringe la activación del Check-in únicamente a la fecha en curso, mostrando tarjeta informativa con candado si es a futuro.
  */
 package com.pminteractive.pmtours.ui.screens.driverGuia
 
@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource // <-- IMPORT AÑADIDO
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -75,7 +76,7 @@ fun DetalleServicioScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Servicio no encontrado",
+                    text = stringResource(id = R.string.detalle_no_encontrado),
                     color = LinceTextSecondary,
                     modifier = Modifier.testTag("detalle_no_encontrado")
                 )
@@ -83,7 +84,7 @@ fun DetalleServicioScreen(
             return@Scaffold
         }
 
-        // Formato chileno de fecha: DD-MM-YYYY
+        // Formato numérico universal de fecha: DD-MM-YYYY
         val fechaChilena = remember(servicio.fecha) {
             try {
                 val fechaParsed = LocalDate.parse(servicio.fecha)
@@ -102,19 +103,25 @@ fun DetalleServicioScreen(
             }
         }
 
-        // Traducción de pasajeros a texto claro
-        val textoPasajeros = remember(servicio.cantidadPasajeros, servicio.paxTexto) {
+        // Traducción de pasajeros conectada a strings.xml
+        val paxFullString = stringResource(id = R.string.detalle_pax_full, 0, 0, 0)
+        val paxAdultosString = stringResource(id = R.string.detalle_pax_adultos, 0)
+        val paxGeneralString = stringResource(id = R.string.detalle_pax_general, 0)
+
+        val textoPasajeros = remember(servicio.cantidadPasajeros, servicio.paxTexto, paxFullString, paxAdultosString, paxGeneralString) {
             val partes = servicio.paxTexto.split("+")
             if (partes.size == 2) {
                 val adultos = partes[0].toIntOrNull() ?: servicio.cantidadPasajeros
                 val ninos = partes[1].toIntOrNull() ?: 0
                 if (ninos > 0) {
-                    "${servicio.cantidadPasajeros} personas ($adultos adultos, $ninos niños)"
+                    paxFullString.replaceFirst("0", servicio.cantidadPasajeros.toString())
+                        .replaceFirst("0", adultos.toString())
+                        .replaceFirst("0", ninos.toString())
                 } else {
-                    "${servicio.cantidadPasajeros} adultos"
+                    paxAdultosString.replaceFirst("0", servicio.cantidadPasajeros.toString())
                 }
             } else {
-                "${servicio.cantidadPasajeros} pasajeros"
+                paxGeneralString.replaceFirst("0", servicio.cantidadPasajeros.toString())
             }
         }
 
@@ -142,7 +149,7 @@ fun DetalleServicioScreen(
                     modifier = Modifier.padding(end = 8.dp)
                 )
                 Text(
-                    text = "Detalle del servicio",
+                    text = stringResource(id = R.string.detalle_titulo),
                     color = LinceTextPrimary,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
@@ -207,12 +214,15 @@ fun DetalleServicioScreen(
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    FilaDetalle(etiqueta = "N° Reserva", valor = servicio.numeroReserva)
-                    FilaDetalle(etiqueta = "Fecha", valor = fechaChilena, destacado = true)
-                    FilaDetalle(etiqueta = "Hora de salida", valor = "${servicio.horaInicio} - ${servicio.horaFinEstimada} hrs")
-                    FilaDetalle(etiqueta = "Tipo de servicio", valor = servicio.tipo.descripcion)
-                    FilaDetalle(etiqueta = "Pasajeros", valor = textoPasajeros, destacado = true)
-                    FilaDetalle(etiqueta = "Tarifa acordada", valor = "$${servicio.tarifaAcordada.toInt()}")
+                    FilaDetalle(etiqueta = stringResource(id = R.string.detalle_ficha_reserva), valor = servicio.numeroReserva)
+                    FilaDetalle(etiqueta = stringResource(id = R.string.detalle_ficha_fecha), valor = fechaChilena, destacado = true)
+                    FilaDetalle(
+                        etiqueta = stringResource(id = R.string.detalle_ficha_hora),
+                        valor = stringResource(id = R.string.detalle_ficha_hora_formato, servicio.horaInicio, servicio.horaFinEstimada)
+                    )
+                    FilaDetalle(etiqueta = stringResource(id = R.string.detalle_ficha_tipo), valor = servicio.tipo.descripcion) // 'descripcion' podría necesitar ser un ID de String a futuro si el enum cambia
+                    FilaDetalle(etiqueta = stringResource(id = R.string.detalle_ficha_pax), valor = textoPasajeros, destacado = true)
+                    FilaDetalle(etiqueta = stringResource(id = R.string.detalle_ficha_tarifa), valor = "$${servicio.tarifaAcordada.toInt()}")
                 }
             }
 
@@ -220,7 +230,7 @@ fun DetalleServicioScreen(
 
             // 4. Bloques de Ubicación con botones amplios e íconos vectoriales
             Text(
-                text = "Puntos de Ruta",
+                text = stringResource(id = R.string.detalle_ruta_titulo),
                 color = LinceTextSecondary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium
@@ -246,7 +256,7 @@ fun DetalleServicioScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Lugar de Recogida (Pickup)",
+                            text = stringResource(id = R.string.detalle_ruta_pickup),
                             color = LinceCyan,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold
@@ -278,7 +288,7 @@ fun DetalleServicioScreen(
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = "Ver en el mapa",
+                            text = stringResource(id = R.string.detalle_btn_mapa),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = LinceTextPrimary
@@ -308,7 +318,7 @@ fun DetalleServicioScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Lugar de Destino",
+                            text = stringResource(id = R.string.detalle_ruta_dropoff),
                             color = LinceRouteEnd,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold
@@ -340,7 +350,7 @@ fun DetalleServicioScreen(
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = "Ver en el mapa",
+                            text = stringResource(id = R.string.detalle_btn_mapa),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = LinceTextPrimary
@@ -353,7 +363,7 @@ fun DetalleServicioScreen(
 
             // 5. Observaciones
             Text(
-                text = "Observaciones de Agencia",
+                text = stringResource(id = R.string.detalle_obs_titulo),
                 color = LinceTextSecondary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium
@@ -369,7 +379,7 @@ fun DetalleServicioScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = if (servicio.notasAgencia.isNotBlank()) servicio.notasAgencia else "Sin notas adicionales.",
+                    text = if (servicio.notasAgencia.isNotBlank()) servicio.notasAgencia else stringResource(id = R.string.detalle_obs_vacia),
                     color = LinceTextPrimary,
                     fontSize = 14.sp,
                     lineHeight = 20.sp,
@@ -400,9 +410,9 @@ fun DetalleServicioScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = if (servicio.checkIn.aTiempo) {
-                                "Check-in registrado a tiempo (+15 min de anticipación)"
+                                stringResource(id = R.string.detalle_checkin_ok)
                             } else {
-                                "Check-in registrado fuera del plazo de anticipación"
+                                stringResource(id = R.string.detalle_checkin_tarde)
                             },
                             color = if (servicio.checkIn.aTiempo) LinceSuccessAccent else LinceError,
                             fontSize = 12.sp,
@@ -426,7 +436,7 @@ fun DetalleServicioScreen(
                             .height(52.dp)
                             .testTag("btn_confirmar")
                     ) {
-                        Text("Confirmar Recepción del Servicio", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        Text(stringResource(id = R.string.detalle_btn_confirmar_recepcion), fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -436,7 +446,7 @@ fun DetalleServicioScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "¿Tienes un inconveniente? Contactar a Coordinación",
+                            text = stringResource(id = R.string.detalle_contacto_coordinacion),
                             color = LinceTextSecondary,
                             fontSize = 13.sp
                         )
@@ -454,7 +464,7 @@ fun DetalleServicioScreen(
                                 .height(52.dp)
                                 .testTag("btn_checkin")
                         ) {
-                            Text("Iniciar Servicio (Check-In GPS)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text(stringResource(id = R.string.detalle_btn_iniciar_checkin), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         }
                     } else {
                         // Tarjeta con vector de candado para fechas futuras
@@ -479,14 +489,14 @@ fun DetalleServicioScreen(
                                 Spacer(modifier = Modifier.width(14.dp))
                                 Column {
                                     Text(
-                                        text = "Check-in programado",
+                                        text = stringResource(id = R.string.detalle_lock_checkin_titulo),
                                         color = LinceTextPrimary,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
-                                        text = "Se habilitará el día del servicio ($fechaChilena).",
+                                        text = stringResource(id = R.string.detalle_lock_checkin_desc, fechaChilena),
                                         color = LinceTextSecondary,
                                         fontSize = 12.sp
                                     )
@@ -506,7 +516,7 @@ fun DetalleServicioScreen(
                             .height(52.dp)
                             .testTag("btn_checkout")
                     ) {
-                        Text("Finalizar Servicio (Check-Out)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(stringResource(id = R.string.detalle_btn_finalizar_checkout), fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
 
@@ -517,7 +527,7 @@ fun DetalleServicioScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "Servicio completado exitosamente",
+                            text = stringResource(id = R.string.detalle_estado_finalizado),
                             color = LinceTextSecondary,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
@@ -535,7 +545,7 @@ fun DetalleServicioScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "Servicio cancelado por coordinación o cliente (Tarifa resguardada)",
+                            text = stringResource(id = R.string.detalle_estado_cancelado),
                             color = LinceError,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
