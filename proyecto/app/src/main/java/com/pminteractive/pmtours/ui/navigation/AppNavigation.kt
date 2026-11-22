@@ -33,6 +33,7 @@ import com.pminteractive.pmtours.viewmodel.AuthUiState
 import com.pminteractive.pmtours.viewmodel.AuthViewModel
 import com.pminteractive.pmtours.viewmodel.CoordinadorViewModel
 import com.pminteractive.pmtours.viewmodel.ServicioViewModel
+import com.pminteractive.pmtours.ui.screens.administrador.CrearAdminScreen
 
 @Composable
 fun AppNavigation(
@@ -216,6 +217,29 @@ fun AppNavigation(
                 usuario = usuarioSesion,
                 onCambiarTab = cambiarTab,
                 onCerrarSesion = cerrarSesion
+            )
+        }
+
+        composable(Screen.ServiciosAdministrador.route) {
+            // Reutilizamos visualmente la lógica del coordinador, pero inyectamos el bottom bar del admin
+            PanelCoordinadorScreen(
+                usuario = usuarioSesion,
+                onCambiarTab = cambiarTab,
+                onCerrarSesion = cerrarSesion,
+                viewModel = coordinadorViewModel,
+                esModoAdmin = true // IMPORTANTE: Agregaremos este flag enseguida
+            )
+        }
+
+        composable(Screen.CrearAdministrador.route) {
+            // Pantalla centralizada para el Administrador donde elige qué crear
+            CrearAdminScreen(
+                usuario = usuarioSesion,
+                onCambiarTab = cambiarTab,
+                onServicioCreado = {
+                    coordinadorViewModel.recargarTodo()
+                    cambiarTab(Screen.ServiciosAdministrador.route) // Lo devuelve a su propia agenda
+                }
             )
         }
 

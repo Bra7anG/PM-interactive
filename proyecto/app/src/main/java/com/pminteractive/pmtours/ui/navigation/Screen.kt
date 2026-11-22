@@ -20,6 +20,8 @@ sealed class Screen(val route: String) {
     data object PerfilCoordinador : Screen("coordinador_perfil")
 
     // Panel del Administrador
-    data object PanelAdministrador : Screen("administrador_panel")
-    data object PerfilAdministrador : Screen("administrador_perfil")
+    data object PanelAdministrador : Screen("administrador_panel") // Pantalla 1: Usuarios
+    data object ServiciosAdministrador : Screen("administrador_servicios") // Pantalla 2: Agenda propia
+    data object CrearAdministrador : Screen("administrador_crear") // Pantalla 3: Pestañas Crear Servicio/Usuario
+    data object PerfilAdministrador : Screen("administrador_perfil") // Pantalla 4: Perfil
 }

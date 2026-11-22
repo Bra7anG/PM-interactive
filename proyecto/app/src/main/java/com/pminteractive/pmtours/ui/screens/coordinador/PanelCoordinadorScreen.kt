@@ -31,6 +31,7 @@ import com.pminteractive.pmtours.model.servicio.TipoServicio
 import com.pminteractive.pmtours.network.NetworkMonitor
 import com.pminteractive.pmtours.network.dto.GuiaDto
 import com.pminteractive.pmtours.network.dto.TransportistaDto
+import com.pminteractive.pmtours.ui.components.AdminBottomBar
 import com.pminteractive.pmtours.ui.components.CoordinadorBottomBar
 import com.pminteractive.pmtours.ui.components.EstadoServicioBadge
 import com.pminteractive.pmtours.ui.components.ServicioCoordinadorCard
@@ -67,7 +68,8 @@ fun PanelCoordinadorScreen(
     usuario: Usuario?,
     onCerrarSesion: () -> Unit = {},
     onCambiarTab: (String) -> Unit = {},
-    viewModel: CoordinadorViewModel = viewModel()
+    viewModel: CoordinadorViewModel = viewModel(),
+    esModoAdmin: Boolean = false
 ) {
     LaunchedEffect(usuario?.sede) {
         viewModel.inicializar(usuario?.sede ?: Sede.SANTIAGO)
@@ -194,10 +196,17 @@ fun PanelCoordinadorScreen(
     Scaffold(
         containerColor = LinceBackground,
         bottomBar = {
-            CoordinadorBottomBar(
-                rutaActual = Screen.PanelCoordinador.route,
-                onNavegar = onCambiarTab
-            )
+            if (esModoAdmin) {
+                AdminBottomBar(
+                    rutaActual = Screen.ServiciosAdministrador.route,
+                    onNavegar = onCambiarTab
+                )
+            } else {
+                CoordinadorBottomBar(
+                    rutaActual = Screen.PanelCoordinador.route,
+                    onNavegar = onCambiarTab
+                )
+            }
         }
     ) { innerPadding ->
         LazyColumn(
@@ -217,7 +226,7 @@ fun PanelCoordinadorScreen(
                 ) {
                     Column {
                         Text(
-                            text = "Coordinación",
+                            text = if(esModoAdmin) "Servicios Operativos" else "Coordinación",
                             color = LinceTextPrimary,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold
