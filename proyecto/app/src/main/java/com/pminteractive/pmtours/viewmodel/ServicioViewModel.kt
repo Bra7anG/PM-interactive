@@ -1,18 +1,11 @@
 /**
- * OBJETIVO DEL SCRIPT:
- * Gestionar la lógica de negocio, trazabilidad operativa y liquidación mensual de servicios para el operador.
+- OBJETIVO DEL SCRIPT:
+- Gestionar la lógica de negocio, trazabilidad operativa y liquidación mensual de servicios para el operador.
  *
- * RESUMEN:
- * Expone la lista de viajes asignados de forma dinámica según el usuario autenticado,
- * filtra los servicios finalizados históricos para mantener limpia la agenda de trabajo,
- * procesa los hitos de Check-in y Check-out con validación horaria, y calcula el resumen financiero del mes.
- *
- * DETALLE:
- * - 'cargarServiciosDelUsuario()': Filtra la lista del repositorio para mostrar servicios activos (pendientes, confirmados, en ruta)
- *   y limita los servicios en estado FINALIZADO únicamente a los pertenecientes al mes actual ('YearMonth.now()').
- * - 'servicios': Expone la lista depurada mediante StateFlow para el consumo directo en 'ServiciosScreen'.
- * - 'resumenMesActual': Calcula automáticamente la liquidación mensual consolidando viajes finalizados y tarifas resguardadas por cancelaciones.
- * - 'realizarCheckIn()': Audita fecha y hora con 'LocalDateTime' evaluando la regla de puntualidad de 15 minutos de anticipación.
+- RESUMEN:
+- Expone la lista de viajes asignados de forma dinámica según el usuario autenticado,
+- filtra los servicios finalizados históricos para mantener limpia la agenda de trabajo,
+- procesa los hitos de Check-in y Check-out con validación horaria, y calcula el resumen financiero del mes.
  */
 package com.pminteractive.pmtours.viewmodel
 
@@ -29,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -55,8 +49,21 @@ class ServicioViewModel(
 
     private val coroutineScope: CoroutineScope = scope ?: viewModelScope
 
+    // Lista COMPLETA de servicios del usuario (usada por el Calendario y Perfil)
     private val _servicios = MutableStateFlow<List<Servicio>>(emptyList())
     val servicios: StateFlow<List<Servicio>> = _servicios.asStateFlow()
+
+    private val _fechaSeleccionada = MutableStateFlow(LocalDate.now())
+    val fechaSeleccionada: StateFlow<LocalDate> = _fechaSeleccionada.asStateFlow()
+
+    // Lista filtrada por la fecha seleccionada (usada exclusivamente por ServiciosScreen)
+    val serviciosDelDia: StateFlow<List<Servicio>> = combine(_servicios, _fechaSeleccionada) { lista, fecha ->
+        lista.filter { it.fecha == fecha.toString() }
+    }.stateIn(
+        scope = coroutineScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     private var jobObservador: Job? = null
     private var trabajadorActual: String? = null
@@ -65,21 +72,27 @@ class ServicioViewModel(
         trabajadorIdInicial?.let { cargarServiciosDelUsuario(it) }
     }
 
+    fun seleccionarFecha(nuevaFecha: LocalDate) {
+        _fechaSeleccionada.value = nuevaFecha
+    }
+
     /**
-     * Conecta la vista con el repositorio filtrando únicamente los viajes pertinentes a la agenda:
-     * - Servicios activos/futuros: Siempre visibles (ASIGNADO, CONFIRMADO, EN_RUTA, CANCELADO).
-     * - Servicios FINALIZADOS: Solo visibles si fueron ejecutados en el mes actual.
+    - Conecta la vista con el repositorio filtrando únicamente los viajes pertinentes a la agenda:
+    - - Servicios activos/futuros: Siempre visibles (ASIGNADO, CONFIRMADO, EN_RUTA, CANCELADO).
+    - - Servicios FINALIZADOS: Solo visibles si fueron ejecutados en el mes actual.
      */
-    fun cargarServiciosDelUsuario(trabajadorId: String) {
+    fun cargarServiciosDelUsuario(trabajadorId: String, forzarRecarga: Boolean = false) {
         if (trabajadorId.isBlank()) {
             limpiar()
             return
         }
-        if (trabajadorId == trabajadorActual) return
+        if (trabajadorId == trabajadorActual && !forzarRecarga) return
 
         trabajadorActual = trabajadorId
         jobObservador?.cancel()
-        _servicios.value = emptyList()
+        if (!forzarRecarga) {
+            _servicios.value = emptyList()
+        }
 
         jobObservador = coroutineScope.launch {
             repository.obtenerServiciosPorTrabajador(trabajadorId).collect { listaBruta ->
@@ -87,10 +100,8 @@ class ServicioViewModel(
 
                 val listaDepurada = listaBruta.filter { servicio ->
                     if (servicio.estado != EstadoServicio.FINALIZADO) {
-                        // Viajes pendientes, confirmados, en ruta o con cancelación protegida se mantienen visibles
                         true
                     } else {
-                        // Viajes finalizados solo se muestran si corresponden al mes en curso
                         try {
                             val fechaServicio = YearMonth.from(LocalDate.parse(servicio.fecha))
                             fechaServicio == mesActual
@@ -112,11 +123,13 @@ class ServicioViewModel(
         _servicios.value = emptyList()
     }
 
-    // Cálculo reactivo mensual para la pantalla de Perfil
+    // Cálculo reactivo mensual para la pantalla de Perfil (utiliza la lista completa)
     val resumenMesActual: StateFlow<ResumenLiquidacion> = servicios.map { lista ->
         val mesActual = YearMonth.now()
+
+        // CORRECCIÓN I18N: Adaptarse al idioma del sistema (Locale.getDefault())
         val nombreMesFormateado = mesActual.format(
-            DateTimeFormatter.ofPattern("MMMM yyyy", Locale("es", "CL"))
+            DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
         ).replaceFirstChar { it.uppercase() }
 
         var total = 0.0
@@ -158,6 +171,7 @@ class ServicioViewModel(
     )
 
     fun obtenerServicioPorId(id: String): Servicio? {
+        // Buscar en la lista completa para asegurarse de encontrarlo incluso si no es de hoy
         return servicios.value.find { it.id == id }
     }
 

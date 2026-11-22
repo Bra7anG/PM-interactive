@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pminteractive.pmtours.R
@@ -24,6 +25,10 @@ fun OperadorBottomBar(
     rutaActual: String,
     onNavegar: (String) -> Unit
 ) {
+    val textoServicios = stringResource(id = R.string.nav_operador_servicios)
+    val textoCalendario = stringResource(id = R.string.nav_operador_calendario)
+    val textoPerfil = stringResource(id = R.string.nav_operador_perfil)
+
     NavigationBar(
         containerColor = LinceBackground,
         tonalElevation = 8.dp
@@ -40,11 +45,11 @@ fun OperadorBottomBar(
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_home),
-                    contentDescription = "Servicios",
+                    contentDescription = textoServicios,
                     modifier = Modifier.size(24.dp)
                 )
             },
-            label = { Text("Servicios", fontSize = 11.sp) },
+            label = { Text(textoServicios, fontSize = 11.sp) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = LinceCyan,
                 selectedTextColor = LinceCyan,
@@ -66,11 +71,11 @@ fun OperadorBottomBar(
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_calendario),
-                    contentDescription = "Calendario",
+                    contentDescription = textoCalendario,
                     modifier = Modifier.size(24.dp)
                 )
             },
-            label = { Text("Calendario", fontSize = 11.sp) },
+            label = { Text(textoCalendario, fontSize = 11.sp) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = LinceCyan,
                 selectedTextColor = LinceCyan,
@@ -92,11 +97,11 @@ fun OperadorBottomBar(
             icon = {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_person),
-                    contentDescription = "Perfil",
+                    contentDescription = textoPerfil,
                     modifier = Modifier.size(24.dp)
                 )
             },
-            label = { Text("Perfil", fontSize = 11.sp) },
+            label = { Text(textoPerfil, fontSize = 11.sp) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = LinceCyan,
                 selectedTextColor = LinceCyan,

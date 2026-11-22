@@ -1,16 +1,6 @@
 /**
- * OBJETIVO DEL SCRIPT:
- * Pantalla de gestión de agenda, turnos y bloqueo de disponibilidad para Driver o Guía.
- *
- * RESUMEN:
- * Renderiza un calendario mensual interactivo con gestos de deslizamiento, selector de día
- * con interruptor (Switch) para conmutar bloqueos y deselección automática al cambiar de mes.
- *
- * DETALLE:
- * - Detecta mediante 'LaunchedEffect' el cambio de mes visible y reinicia 'fechaSeleccionada' a null.
- * - Utiliza vectores nativos 'ic_touch' e 'ic_info' en lugar de emojis informales.
- * - Valida en tiempo real que no se bloqueen días con servicios asignados o con menos de 7 días de anticipación.
- * - Mantiene actualizada la lista inferior con los próximos días bloqueados confirmados.
+- OBJETIVO DEL SCRIPT:
+- Pantalla de gestión de agenda, turnos y bloqueo de disponibilidad para Driver o Guía.
  */
 package com.pminteractive.pmtours.ui.screens.driverGuia
 
@@ -30,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource // <-- IMPORT AÑADIDO
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -76,9 +67,9 @@ fun CalendarioScreen(
         serviciosAsignados
             .filter {
                 it.estado == EstadoServicio.ASIGNADO ||
-                    it.estado == EstadoServicio.CONFIRMADO ||
-                    it.estado == EstadoServicio.EN_RUTA ||
-                    it.estado == EstadoServicio.FINALIZADO
+                        it.estado == EstadoServicio.CONFIRMADO ||
+                        it.estado == EstadoServicio.EN_RUTA ||
+                        it.estado == EstadoServicio.FINALIZADO
             }
             .map { it.fecha }
             .toSet()
@@ -105,7 +96,7 @@ fun CalendarioScreen(
     val visibleMonth = calendarState.firstVisibleMonth.yearMonth
     val textoMesVisible = remember(visibleMonth) {
         visibleMonth.format(
-            DateTimeFormatter.ofPattern("MMMM yyyy", Locale("es", "CL"))
+            DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
         ).replaceFirstChar { it.uppercase() }
     }
 
@@ -115,15 +106,13 @@ fun CalendarioScreen(
         }
     }
 
-    val subtituloUsuario = remember(usuario) {
-        val nombre = usuario?.nombreCompleto ?: "Carlos Morales"
-        val rol = usuario?.rol?.name?.lowercase()?.replaceFirstChar { it.uppercase() } ?: "Driver"
-        "$nombre · $rol"
-    }
+    val nombreStr = usuario?.nombreCompleto ?: "Carlos Morales"
+    val rolStr = usuario?.rol?.name?.lowercase()?.replaceFirstChar { it.uppercase() } ?: "Driver"
+    val subtituloUsuario = stringResource(id = R.string.calendario_subtitulo, nombreStr, rolStr)
 
     val textoFechaSeleccionada = remember(fechaSeleccionada) {
         fechaSeleccionada?.let {
-            val formato = DateTimeFormatter.ofPattern("d 'de' MMMM", Locale("es", "CL"))
+            val formato = DateTimeFormatter.ofPattern("d 'de' MMMM", Locale.getDefault())
             it.format(formato)
         }
     }
@@ -169,7 +158,7 @@ fun CalendarioScreen(
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "Mi disponibilidad",
+                text = stringResource(id = R.string.calendario_titulo),
                 color = LinceTextPrimary,
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold
@@ -177,14 +166,13 @@ fun CalendarioScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 2. Leyenda superior
+            // 2. Leyenda superior (Simplificada a 2 estados)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                LeyendaEstado(color = LincePrimary, texto = "Disponible")
-                LeyendaEstado(color = LinceService, texto = "Con servicio")
-                LeyendaEstado(color = LinceBlockedBorder, texto = "Bloqueado", conCandado = true)
+                LeyendaEstado(color = LinceService, texto = stringResource(id = R.string.calendario_leyenda_servicio))
+                LeyendaEstado(color = LinceBlockedBorder, texto = stringResource(id = R.string.calendario_leyenda_bloqueado), conCandado = true)
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -251,7 +239,7 @@ fun CalendarioScreen(
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
                 diasSemana.forEach { dia ->
-                    val inicial = dia.getDisplayName(TextStyle.NARROW, Locale("es", "CL")).uppercase()
+                    val inicial = dia.getDisplayName(TextStyle.NARROW, Locale.getDefault()).uppercase()
                     Text(
                         text = inicial,
                         color = LinceTextSecondary,
@@ -309,7 +297,7 @@ fun CalendarioScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = if (estaBloqueado) "Día marcado como libre" else "Día disponible",
+                                text = if (estaBloqueado) stringResource(id = R.string.calendario_dia_libre) else stringResource(id = R.string.calendario_dia_disponible),
                                 color = if (estaBloqueado) LinceBlockedBorder else LincePrimary,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium
@@ -334,7 +322,6 @@ fun CalendarioScreen(
                         )
                     }
                 } else {
-                    // Estado vacío con ícono vectorial 'ic_touch'
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -349,7 +336,7 @@ fun CalendarioScreen(
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = "Toca un día del calendario para gestionar tu turno",
+                            text = stringResource(id = R.string.calendario_prompt_tocar),
                             color = LinceTextSecondary,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
@@ -362,10 +349,16 @@ fun CalendarioScreen(
             // Advertencia contextual con 'ic_info'
             if (fechaSeleccionada != null && !puedeBloquear && !estaBloqueado) {
                 Spacer(modifier = Modifier.height(8.dp))
+
+                // Extraemos los strings desde los recursos para los mensajes de error
+                val errorServicio = stringResource(id = R.string.calendario_error_servicio)
+                val errorPasado = stringResource(id = R.string.calendario_error_pasado)
+                val errorAnticipacion = stringResource(id = R.string.calendario_error_anticipacion)
+
                 val motivoError = when {
-                    tieneServicioSeleccionado -> "No puedes bloquear este día: ya tienes un servicio asignado."
-                    esFechaPasada -> "No puedes bloquear una fecha que ya pasó."
-                    else -> "Los días libres deben solicitarse con al menos 1 semana de anticipación."
+                    tieneServicioSeleccionado -> errorServicio
+                    esFechaPasada -> errorPasado
+                    else -> errorAnticipacion
                 }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -392,7 +385,7 @@ fun CalendarioScreen(
 
             // 6. Sección: Próximos días bloqueados
             Text(
-                text = "Próximos días bloqueados",
+                text = stringResource(id = R.string.calendario_bloqueos_titulo),
                 color = LinceTextSecondary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold
@@ -410,7 +403,7 @@ fun CalendarioScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "No tienes días libres bloqueados próximamente.",
+                        text = stringResource(id = R.string.calendario_bloqueos_vacio),
                         color = LinceTextSecondary,
                         fontSize = 13.sp,
                         modifier = Modifier.padding(16.dp)
@@ -419,7 +412,7 @@ fun CalendarioScreen(
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     proximosBloqueos.forEach { fecha ->
-                        val formatoItem = DateTimeFormatter.ofPattern("d 'de' MMMM", Locale("es", "CL"))
+                        val formatoItem = DateTimeFormatter.ofPattern("d 'de' MMMM", Locale.getDefault())
                         Surface(
                             color = LinceSurface,
                             shape = RoundedCornerShape(12.dp),
@@ -450,7 +443,7 @@ fun CalendarioScreen(
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = "Día libre",
+                                        text = stringResource(id = R.string.calendario_etiqueta_dia_libre),
                                         color = LinceBlockedBorder,
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.SemiBold
@@ -523,15 +516,16 @@ private fun CeldaDiaCalendario(
                 )
             }
 
+            // Candado MEJORADO: Ahora es blanco (LinceTextPrimary) y más grande para destacar
             if (estaBloqueado && !tieneServicio) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_lock),
                     contentDescription = null,
-                    tint = LinceBlockedSoft,
+                    tint = LinceTextPrimary,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(2.dp)
-                        .size(9.dp)
+                        .size(12.dp)
                 )
             }
         }

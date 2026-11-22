@@ -1,6 +1,12 @@
 package com.pminteractive.pmtours.ui.navigation
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -10,27 +16,37 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.pminteractive.pmtours.model.datosoperativos.RolUsuario
-import com.pminteractive.pmtours.model.operadores.Usuario
 import com.pminteractive.pmtours.repository.AppContainer
 import com.pminteractive.pmtours.ui.screens.administrador.PanelAdministradorScreen
 import com.pminteractive.pmtours.ui.screens.administrador.PerfilAdministradorScreen
 import com.pminteractive.pmtours.ui.screens.auth.LoginScreen
+import com.pminteractive.pmtours.ui.screens.coordinador.CrearServicioScreen
 import com.pminteractive.pmtours.ui.screens.coordinador.PanelCoordinadorScreen
 import com.pminteractive.pmtours.ui.screens.coordinador.PerfilCoordinadorScreen
 import com.pminteractive.pmtours.ui.screens.driverGuia.CalendarioScreen
 import com.pminteractive.pmtours.ui.screens.driverGuia.DetalleServicioScreen
 import com.pminteractive.pmtours.ui.screens.driverGuia.PerfilScreen
 import com.pminteractive.pmtours.ui.screens.driverGuia.ServiciosScreen
+import com.pminteractive.pmtours.ui.theme.LinceBackground
+import com.pminteractive.pmtours.ui.theme.LinceCyan
+import com.pminteractive.pmtours.viewmodel.AuthUiState
+import com.pminteractive.pmtours.viewmodel.AuthViewModel
+import com.pminteractive.pmtours.viewmodel.CoordinadorViewModel
 import com.pminteractive.pmtours.viewmodel.ServicioViewModel
+import com.pminteractive.pmtours.ui.screens.administrador.CrearAdminScreen
 
 @Composable
 fun AppNavigation(
     navController: NavHostController = rememberNavController()
 ) {
+    // Elevamos el AuthViewModel para compartir el estado entre Splash y Login
+    val authViewModel: AuthViewModel = viewModel()
+
     var usuarioSesion by remember {
         mutableStateOf(AppContainer.authRepository.obtenerUsuarioActual())
     }
     val servicioViewModel: ServicioViewModel = viewModel()
+    val coordinadorViewModel: CoordinadorViewModel = viewModel()
 
     LaunchedEffect(usuarioSesion?.id) {
         usuarioSesion?.id?.let { servicioViewModel.cargarServiciosDelUsuario(it) }
@@ -58,7 +74,7 @@ fun AppNavigation(
             RolUsuario.ADMINISTRADOR -> Screen.PanelAdministrador.route
             else -> Screen.Servicios.route
         }
-        AppContainer.authRepository.cerrarSesion()
+        authViewModel.cerrarSesion() // Usamos el ViewModel directamente
         servicioViewModel.limpiar()
         usuarioSesion = null
         navController.navigate(Screen.Login.route) {
@@ -69,11 +85,42 @@ fun AppNavigation(
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Login.route
+        startDestination = "splash" // Cambiamos el inicio
     ) {
+        // 0. Pantalla de Carga y Enrutamiento Inicial
+        composable("splash") {
+            val uiState by authViewModel.uiState.collectAsState()
+
+            SplashScreenUI()
+
+            LaunchedEffect(uiState) {
+                when (uiState) {
+                    is AuthUiState.Autenticado -> {
+                        val usuarioLogueado = (uiState as AuthUiState.Autenticado).usuario
+                        usuarioSesion = usuarioLogueado
+                        val rutaPrincipal = when (usuarioLogueado.rol) {
+                            RolUsuario.COORDINADOR -> Screen.PanelCoordinador.route
+                            RolUsuario.ADMINISTRADOR -> Screen.PanelAdministrador.route
+                            else -> Screen.Servicios.route
+                        }
+                        navController.navigate(rutaPrincipal) {
+                            popUpTo("splash") { inclusive = true }
+                        }
+                    }
+                    is AuthUiState.Inactivo, is AuthUiState.Error -> {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo("splash") { inclusive = true }
+                        }
+                    }
+                    AuthUiState.Cargando -> { /* Espera a que termine de cargar */ }
+                }
+            }
+        }
+
         // 1. Login
         composable(Screen.Login.route) {
             LoginScreen(
+                viewModel = authViewModel, // Pasamos la misma instancia
                 onLoginExitoso = { usuarioLogueado ->
                     usuarioSesion = usuarioLogueado
                     val rutaPrincipal = when (usuarioLogueado.rol) {
@@ -88,13 +135,12 @@ fun AppNavigation(
             )
         }
 
-        // 2. Tab Servicios
+        // 2. Tab Servicios (Operador)
         composable(Screen.Servicios.route) {
             ServiciosScreen(
                 usuarioId = usuarioSesion?.id ?: "TRA-001",
                 nombreUsuario = primerNombre,
                 onServicioClick = { servicio ->
-                    // Navega pasando el ID del viaje seleccionado
                     navController.navigate(Screen.DetalleServicio.crearRuta(servicio.id))
                 },
                 onCambiarTab = cambiarTab,
@@ -102,7 +148,7 @@ fun AppNavigation(
             )
         }
 
-        // 3. Detalle del Servicio (Ruta con parámetro servicioId)
+        // 3. Detalle del Servicio
         composable(
             route = Screen.DetalleServicio.route,
             arguments = listOf(navArgument("servicioId") { type = NavType.StringType })
@@ -116,7 +162,7 @@ fun AppNavigation(
             )
         }
 
-        // 3. Tab Calendario
+        // 4. Tab Calendario (Operador)
         composable(Screen.Calendario.route) {
             CalendarioScreen(
                 usuario = usuarioSesion,
@@ -125,7 +171,7 @@ fun AppNavigation(
             )
         }
 
-        // 5. Tab Perfil
+        // 5. Tab Perfil (Operador)
         composable(Screen.Perfil.route) {
             PerfilScreen(
                 usuario = usuarioSesion,
@@ -135,12 +181,24 @@ fun AppNavigation(
             )
         }
 
-        // 6. Panel Coordinador
+        // 6. Panel Coordinador (3 pestañas: Inicio, Crear, Perfil)
         composable(Screen.PanelCoordinador.route) {
             PanelCoordinadorScreen(
                 usuario = usuarioSesion,
                 onCambiarTab = cambiarTab,
-                onCerrarSesion = cerrarSesion
+                onCerrarSesion = cerrarSesion,
+                viewModel = coordinadorViewModel
+            )
+        }
+
+        composable(Screen.CrearServicioCoordinador.route) {
+            CrearServicioScreen(
+                usuario = usuarioSesion,
+                onCambiarTab = cambiarTab,
+                onServicioCreado = {
+                    coordinadorViewModel.recargarTodo()
+                    cambiarTab(Screen.PanelCoordinador.route)
+                }
             )
         }
 
@@ -148,7 +206,8 @@ fun AppNavigation(
             PerfilCoordinadorScreen(
                 usuario = usuarioSesion,
                 onCambiarTab = cambiarTab,
-                onCerrarSesion = cerrarSesion
+                onCerrarSesion = cerrarSesion,
+                viewModel = coordinadorViewModel
             )
         }
 
@@ -161,6 +220,29 @@ fun AppNavigation(
             )
         }
 
+        composable(Screen.ServiciosAdministrador.route) {
+            // Reutilizamos visualmente la lógica del coordinador, pero inyectamos el bottom bar del admin
+            PanelCoordinadorScreen(
+                usuario = usuarioSesion,
+                onCambiarTab = cambiarTab,
+                onCerrarSesion = cerrarSesion,
+                viewModel = coordinadorViewModel,
+                esModoAdmin = true // IMPORTANTE: Agregaremos este flag enseguida
+            )
+        }
+
+        composable(Screen.CrearAdministrador.route) {
+            // Pantalla centralizada para el Administrador donde elige qué crear
+            CrearAdminScreen(
+                usuario = usuarioSesion,
+                onCambiarTab = cambiarTab,
+                onServicioCreado = {
+                    coordinadorViewModel.recargarTodo()
+                    cambiarTab(Screen.ServiciosAdministrador.route) // Lo devuelve a su propia agenda
+                }
+            )
+        }
+
         composable(Screen.PerfilAdministrador.route) {
             PerfilAdministradorScreen(
                 usuario = usuarioSesion,
@@ -168,5 +250,22 @@ fun AppNavigation(
                 onCerrarSesion = cerrarSesion
             )
         }
+    }
+}
+
+// Componente visual extraído para la pantalla de carga inicial
+@Composable
+fun SplashScreenUI() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(LinceBackground), // Mantiene el fondo corporativo oscuro
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(
+            color = LinceCyan,
+            modifier = Modifier.size(60.dp), // Ruedita un poco más grande
+            strokeWidth = 5.dp // Borde un poco más grueso
+        )
     }
 }

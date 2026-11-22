@@ -1,4 +1,3 @@
-import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
@@ -6,16 +5,17 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-val localProperties = Properties().apply {
-    val file = rootProject.file("local.properties")
-    if (file.exists()) {
-        FileInputStream(file).use { load(it) }
-    }
+// Lee claves locales (API key y firma) desde local.properties
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
 }
 
 fun localOrEnv(key: String): String? =
     localProperties.getProperty(key) ?: System.getenv(key)
 
+val linceApiKey = localProperties.getProperty("LINCE_API_KEY") ?: ""
 val releaseStoreFile = localOrEnv("PMTOURS_STORE_FILE")
     ?.let { file(it) }
     ?.takeIf { it.exists() }
@@ -30,10 +30,15 @@ android {
         applicationId = "com.pminteractive.pmtours"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Inyecta la clave como constante en BuildConfig
+        buildConfigField("String", "LINCE_API_KEY", "\"$linceApiKey\"")
+        // URL base centralizada para Retrofit (es obligatorio que termine con "/")
+        buildConfigField("String", "LINCE_BASE_URL", "\"https://ws.southbound.travel/lince-api/\"")
     }
 
     signingConfigs {
@@ -64,6 +69,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -84,10 +90,11 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
     // Dependencias de clase
-    // Conecta los ViewModels con Compose y retiene el estado ante giros de pantalla
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
-    // Gestiona la navegación y el flujo entre pantallas en una sola Activity
     implementation("androidx.navigation:navigation-compose:2.10.1")
-    // Libreria del calendario
     implementation("com.kizitonwose.calendar:compose:2.6.0")
+    // Red y consumo de API REST (Retrofit + Gson + Logs)
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 }

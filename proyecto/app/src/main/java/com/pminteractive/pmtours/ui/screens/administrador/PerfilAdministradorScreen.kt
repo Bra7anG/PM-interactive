@@ -16,13 +16,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource // <-- IMPORT AÑADIDO
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pminteractive.pmtours.R
 import com.pminteractive.pmtours.model.operadores.Administrador
 import com.pminteractive.pmtours.model.operadores.Usuario
-import com.pminteractive.pmtours.ui.components.PanelBottomBar
+import com.pminteractive.pmtours.ui.components.AdminBottomBar
+import com.pminteractive.pmtours.ui.components.SelectorIdioma
 import com.pminteractive.pmtours.ui.navigation.Screen
 import com.pminteractive.pmtours.ui.theme.*
 import com.pminteractive.pmtours.viewmodel.AdministradorViewModel
@@ -45,11 +48,8 @@ fun PerfilAdministradorScreen(
     Scaffold(
         containerColor = LinceBackground,
         bottomBar = {
-            PanelBottomBar(
+            AdminBottomBar(
                 rutaActual = Screen.PerfilAdministrador.route,
-                rutaPrincipal = Screen.PanelAdministrador.route,
-                etiquetaPrincipal = "Admin",
-                rutaPerfil = Screen.PerfilAdministrador.route,
                 onNavegar = onCambiarTab
             )
         }
@@ -85,18 +85,22 @@ fun PerfilAdministradorScreen(
 
                 Column {
                     Text(
-                        text = usuario?.nombreCompleto ?: "Administrador",
+                        text = usuario?.nombreCompleto ?: stringResource(id = R.string.admin_perfil_nombre_fallback),
                         color = LinceTextPrimary,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "${usuario?.rol?.name ?: "ADMINISTRADOR"} · Base ${usuario?.sede?.nombreCiudad ?: "Santiago"}",
+                        text = stringResource(
+                            id = R.string.admin_perfil_rol_base,
+                            usuario?.rol?.name ?: "ADMINISTRADOR",
+                            usuario?.sede?.nombreCiudad ?: "Santiago"
+                        ),
                         color = LinceTextSecondary,
                         fontSize = 13.sp
                     )
                     Text(
-                        text = "Nivel de acceso: $nivelAcceso",
+                        text = stringResource(id = R.string.admin_perfil_nivel_acceso, nivelAcceso),
                         color = LinceTextSecondary,
                         fontSize = 12.sp
                     )
@@ -115,7 +119,7 @@ fun PerfilAdministradorScreen(
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
                     Text(
-                        text = "Resumen del sistema",
+                        text = stringResource(id = R.string.admin_perfil_resumen_titulo),
                         color = LinceCyan,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
@@ -129,19 +133,19 @@ fun PerfilAdministradorScreen(
                     ) {
                         MetricaSistema(
                             valor = resumen.totalUsuarios,
-                            etiqueta = "Usuarios",
+                            etiqueta = stringResource(id = R.string.admin_perfil_metrica_usuarios),
                             color = LinceCyan,
                             modifier = Modifier.weight(1f)
                         )
                         MetricaSistema(
                             valor = resumen.drivers,
-                            etiqueta = "Drivers",
+                            etiqueta = stringResource(id = R.string.admin_perfil_metrica_drivers),
                             color = LincePending,
                             modifier = Modifier.weight(1f)
                         )
                         MetricaSistema(
                             valor = resumen.guias,
-                            etiqueta = "Guías",
+                            etiqueta = stringResource(id = R.string.admin_perfil_metrica_guias),
                             color = LinceSuccess,
                             modifier = Modifier.weight(1f)
                         )
@@ -161,24 +165,24 @@ fun PerfilAdministradorScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Datos de contacto",
+                        text = stringResource(id = R.string.admin_perfil_contacto_titulo),
                         color = LinceCyan,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "Correo: ${usuario?.correo ?: "admin@pmtours.cl"}",
+                        text = stringResource(id = R.string.admin_perfil_contacto_correo, usuario?.correo ?: "admin@pmtours.cl"),
                         color = LinceTextPrimary,
                         fontSize = 14.sp
                     )
                     Text(
-                        text = "Teléfono: ${usuario?.telefono ?: "+56900001111"}",
+                        text = stringResource(id = R.string.admin_perfil_contacto_telefono, usuario?.telefono ?: "+56900001111"),
                         color = LinceTextSecondary,
                         fontSize = 13.sp
                     )
                     Text(
-                        text = "Dirección: ${usuario?.direccion ?: "Oficina Central PM Tours, Santiago"}",
+                        text = stringResource(id = R.string.admin_perfil_contacto_direccion, usuario?.direccion ?: "Oficina Central PM Tours, Santiago"),
                         color = LinceTextSecondary,
                         fontSize = 12.sp
                     )
@@ -186,6 +190,13 @@ fun PerfilAdministradorScreen(
             }
 
             Spacer(modifier = Modifier.height(28.dp))
+
+            // ==========================================
+            // COMPONENTE DE SELECCIÓN DE IDIOMA
+            // ==========================================
+            SelectorIdioma()
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             OutlinedButton(
                 onClick = onCerrarSesion,
@@ -199,7 +210,7 @@ fun PerfilAdministradorScreen(
                     .height(50.dp)
             ) {
                 Text(
-                    text = "Cerrar Sesión Institucional",
+                    text = stringResource(id = R.string.btn_cerrar_sesion), // Ya lo teníamos traducido de la otra pantalla
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
                 )
