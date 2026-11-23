@@ -175,7 +175,7 @@ Proyecto de carácter estrictamente académico. No se utilizan credenciales prod
 - **Version:** `1.0.3` (`versionCode` 3)
 - **Android minimo:** 8.0 (API 26)
 - **Firma:** APK Signature Scheme v2 + v3
-- **SHA-256:** `b9effa26f27186c34ef43631ff801b8986330a5da36321adbe568c8d713f298b`
+- **SHA-256:** `2f62d917b224176680ae186254b028bf0d405b3a896fb25aa1f3881424c54a9e`
 
 ### Instalacion en el telefono
 
