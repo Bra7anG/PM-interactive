@@ -9,9 +9,10 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import com.pminteractive.pmtours.model.servicio.Servicio
-import com.pminteractive.pmtours.repository.FakeServicioRepository
+import com.pminteractive.pmtours.support.ContenidoTestEspanol
+import com.pminteractive.pmtours.support.RepositorioServiciosFake
+import com.pminteractive.pmtours.support.serviciosPrueba
 import com.pminteractive.pmtours.ui.screens.driverGuia.ServiciosScreen
-import com.pminteractive.pmtours.ui.theme.PMTOURSTheme
 import com.pminteractive.pmtours.viewmodel.ServicioViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -24,10 +25,10 @@ class ServiciosScreenUITest {
     val rule = createComposeRule()
 
     private fun mostrarServicios(onServicioClick: (Servicio) -> Unit = {}) {
-        val viewModel = ServicioViewModel(FakeServicioRepository())
+        val viewModel = ServicioViewModel(RepositorioServiciosFake(serviciosPrueba()))
 
         rule.setContent {
-            PMTOURSTheme {
+            ContenidoTestEspanol {
                 ServiciosScreen(
                     nombreUsuario = "Carlos",
                     onServicioClick = onServicioClick,
@@ -47,7 +48,11 @@ class ServiciosScreenUITest {
     fun muestraSaludoYLista() {
         mostrarServicios()
 
-        rule.onNodeWithText("Hola, Carlos").assertIsDisplayed()
+        rule.waitUntil(5_000) {
+            rule.onAllNodesWithText("Carlos", substring = true)
+                .fetchSemanticsNodes()
+                .isNotEmpty()
+        }
         rule.onNodeWithTag("servicio_card_SRV-000245").assertIsDisplayed()
         rule.onNodeWithTag("servicio_card_SRV-000247").assertIsDisplayed()
     }

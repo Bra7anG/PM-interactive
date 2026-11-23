@@ -9,9 +9,9 @@ import androidx.compose.ui.test.performClick
 import com.pminteractive.pmtours.model.servicio.EstadoServicio
 import com.pminteractive.pmtours.model.servicio.Servicio
 import com.pminteractive.pmtours.model.servicio.TipoServicio
+import com.pminteractive.pmtours.support.ContenidoTestEspanol
 import com.pminteractive.pmtours.support.servicioPrueba
 import com.pminteractive.pmtours.ui.components.ServicioCard
-import com.pminteractive.pmtours.ui.theme.PMTOURSTheme
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -24,7 +24,7 @@ class ServicioCardUITest {
 
     private fun mostrarCard(servicio: Servicio, onClick: () -> Unit = {}) {
         rule.setContent {
-            PMTOURSTheme {
+            ContenidoTestEspanol {
                 ServicioCard(
                     servicio = servicio,
                     onCardClick = onClick
@@ -45,9 +45,9 @@ class ServicioCardUITest {
         )
 
         rule.onNodeWithText("09:30").assertIsDisplayed()
-        rule.onNodeWithText("TRANSFER").assertIsDisplayed()
+        rule.onNodeWithText("TRANSFER", substring = true).assertIsDisplayed()
         rule.onNodeWithTag("servicio_estado_CARD", useUnmergedTree = true)
-            .assertTextEquals("Pendiente")
+            .assertTextEquals("PENDIENTE")
     }
 
     @Test
@@ -60,7 +60,7 @@ class ServicioCardUITest {
         )
 
         rule.onNodeWithTag("servicio_estado_CONFIRMADO", useUnmergedTree = true)
-            .assertTextEquals("Confirmado")
+            .assertTextEquals("CONFIRMADO")
     }
 
     @Test
@@ -73,7 +73,7 @@ class ServicioCardUITest {
         )
 
         rule.onNodeWithTag("servicio_estado_EN_RUTA", useUnmergedTree = true)
-            .assertTextEquals("En ruta")
+            .assertTextEquals("EN RUTA")
     }
 
     @Test

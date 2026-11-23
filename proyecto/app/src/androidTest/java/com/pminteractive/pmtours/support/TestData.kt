@@ -90,6 +90,22 @@ fun servicioPrueba(
     tarifaAcordada = tarifa
 )
 
+fun serviciosPrueba(): List<Servicio> = listOf(
+    servicioPrueba(
+        id = "SRV-000245",
+        titulo = "Transfer In: Aeropuerto SCL -> Hotel Barrio Lastarria",
+        estado = EstadoServicio.ASIGNADO,
+        driverId = "TRA-001"
+    ),
+    servicioPrueba(
+        id = "SRV-000247",
+        titulo = "Excursión Full Day: Cajón del Maipo & Embalse El Yeso",
+        estado = EstadoServicio.CONFIRMADO,
+        driverId = "TRA-001",
+        tipo = TipoServicio.EXCURSION
+    )
+)
+
 class RepositorioServiciosFake(
     serviciosIniciales: List<Servicio>
 ) : ServicioRepository {

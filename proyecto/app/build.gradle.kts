@@ -12,6 +12,9 @@ if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
 }
 val linceApiKey = localProperties.getProperty("LINCE_API_KEY") ?: ""
+val backendBaseUrl = providers.gradleProperty("backendBaseUrl")
+    .orElse("http://10.0.2.2:8080/")
+    .get()
 
 android {
     namespace = "com.pminteractive.pmtours"
@@ -32,6 +35,7 @@ android {
         buildConfigField("String", "LINCE_API_KEY", "\"$linceApiKey\"")
         // URL base centralizada para Retrofit (es obligatorio que termine con "/")
         buildConfigField("String", "LINCE_BASE_URL", "\"https://ws.southbound.travel/lince-api/\"")
+        buildConfigField("String", "BACKEND_BASE_URL", "\"$backendBaseUrl\"")
     }
 
     buildTypes {
