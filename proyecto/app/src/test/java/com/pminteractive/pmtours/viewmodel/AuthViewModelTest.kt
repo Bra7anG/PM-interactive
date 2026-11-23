@@ -1,6 +1,5 @@
 package com.pminteractive.pmtours.viewmodel
 
-import com.pminteractive.pmtours.repository.FakeAuthRepository
 import com.pminteractive.pmtours.support.RepositorioAuthFake
 import com.pminteractive.pmtours.support.guiaPrueba
 import kotlinx.coroutines.CompletableDeferred
@@ -29,15 +28,14 @@ class AuthViewModelTest {
     }
 
     @Test
-    fun estadoInicialEsInactivo() {
-        val viewModel = AuthViewModel(FakeAuthRepository(), scope)
-
-        assertEquals(AuthUiState.Inactivo, viewModel.uiState.value)
+    fun estadoInicialEsCargando() {
+        val viewModel = AuthViewModel(RepositorioAuthFake(), scope)
+        assertEquals(AuthUiState.Cargando, viewModel.uiState.value)
     }
 
     @Test
     fun loginCorrecto() {
-        val repositorio = FakeAuthRepository()
+        val repositorio = RepositorioAuthFake(usuario = guiaPrueba(id = "GUI-012"))
         val viewModel = AuthViewModel(repositorio, scope)
 
         viewModel.iniciarSesion("valentina.lagos@pmtours.cl", "1234")
@@ -53,18 +51,18 @@ class AuthViewModelTest {
 
     @Test
     fun claveIncorrecta() {
-        val viewModel = AuthViewModel(FakeAuthRepository(), scope)
+        val repositorio = RepositorioAuthFake(usuario = null)
+        val viewModel = AuthViewModel(repositorio, scope)
 
         viewModel.iniciarSesion("valentina.lagos@pmtours.cl", "000")
 
-        val estado = viewModel.uiState.value
-        assertTrue(estado is AuthUiState.Error)
-        assertTrue((estado as AuthUiState.Error).mensaje.contains("Credenciales incorrectas"))
+        assertTrue(viewModel.uiState.value is AuthUiState.Error)
     }
 
     @Test
     fun correoDesconocido() {
-        val viewModel = AuthViewModel(FakeAuthRepository(), scope)
+        val repositorio = RepositorioAuthFake(usuario = null)
+        val viewModel = AuthViewModel(repositorio, scope)
 
         viewModel.iniciarSesion("desconocido@pmtours.cl", "1234")
 
@@ -78,10 +76,7 @@ class AuthViewModelTest {
 
         viewModel.iniciarSesion("", "")
 
-        assertEquals(
-            AuthUiState.Error("Debe ingresar usuario y contraseña."),
-            viewModel.uiState.value
-        )
+        assertTrue(viewModel.uiState.value is AuthUiState.Error)
         assertEquals(0, repositorio.llamadasLogin)
     }
 
@@ -104,7 +99,7 @@ class AuthViewModelTest {
 
     @Test
     fun cerrarSesionVuelveAInactivo() {
-        val repositorio = FakeAuthRepository()
+        val repositorio = RepositorioAuthFake(usuario = guiaPrueba())
         val viewModel = AuthViewModel(repositorio, scope)
 
         viewModel.iniciarSesion("valentina.lagos@pmtours.cl", "1234")

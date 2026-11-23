@@ -16,6 +16,10 @@ fun localOrEnv(key: String): String? =
     localProperties.getProperty(key) ?: System.getenv(key)
 
 val linceApiKey = localProperties.getProperty("LINCE_API_KEY") ?: ""
+val backendBaseUrl = providers.gradleProperty("backendBaseUrl")
+    .orElse("http://10.0.2.2:8080/")
+    .get()
+
 val releaseStoreFile = localOrEnv("PMTOURS_STORE_FILE")
     ?.let { file(it) }
     ?.takeIf { it.exists() }
@@ -30,8 +34,8 @@ android {
         applicationId = "com.pminteractive.pmtours"
         minSdk = 26
         targetSdk = 37
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.0.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -39,6 +43,7 @@ android {
         buildConfigField("String", "LINCE_API_KEY", "\"$linceApiKey\"")
         // URL base centralizada para Retrofit (es obligatorio que termine con "/")
         buildConfigField("String", "LINCE_BASE_URL", "\"https://ws.southbound.travel/lince-api/\"")
+        buildConfigField("String", "BACKEND_BASE_URL", "\"$backendBaseUrl\"")
     }
 
     signingConfigs {

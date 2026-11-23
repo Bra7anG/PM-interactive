@@ -12,6 +12,7 @@ import com.pminteractive.pmtours.model.servicio.Servicio
 import com.pminteractive.pmtours.model.servicio.TipoServicio
 import com.pminteractive.pmtours.repository.AuthRepository
 import com.pminteractive.pmtours.repository.ServicioRepository
+import com.pminteractive.pmtours.repository.UsuarioLocalEntity
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -179,6 +180,15 @@ class RepositorioAuthFake(
     override fun obtenerUsuarioActual(): Usuario? = usuarioActual
 
     override fun obtenerUsuarios(): List<Usuario> = listOfNotNull(usuario)
+
+    override fun observarUsuariosAdmin(): Flow<List<Pair<Usuario, Boolean>>> =
+        kotlinx.coroutines.flow.flowOf(listOfNotNull(usuario?.let { it to true }))
+
+    override suspend fun crearUsuarioLocal(usuario: UsuarioLocalEntity): Result<Unit> =
+        Result.success(Unit)
+
+    override suspend fun alternarEstadoUsuario(id: String, activo: Boolean): Result<Unit> =
+        Result.success(Unit)
 
     override fun cerrarSesion() {
         usuarioActual = null

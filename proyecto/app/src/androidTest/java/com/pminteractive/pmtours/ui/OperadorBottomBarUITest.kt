@@ -6,9 +6,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.pminteractive.pmtours.support.ContenidoTestEspanol
 import com.pminteractive.pmtours.ui.components.OperadorBottomBar
 import com.pminteractive.pmtours.ui.navigation.Screen
-import com.pminteractive.pmtours.ui.theme.PMTOURSTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -21,7 +21,7 @@ class OperadorBottomBarUITest {
     @Test
     fun muestraTabsYServiciosSeleccionado() {
         rule.setContent {
-            PMTOURSTheme {
+            ContenidoTestEspanol {
                 OperadorBottomBar(
                     rutaActual = Screen.Servicios.route,
                     onNavegar = {}
@@ -40,7 +40,7 @@ class OperadorBottomBarUITest {
         var destino: String? = null
 
         rule.setContent {
-            PMTOURSTheme {
+            ContenidoTestEspanol {
                 OperadorBottomBar(
                     rutaActual = Screen.Servicios.route,
                     onNavegar = { destino = it }

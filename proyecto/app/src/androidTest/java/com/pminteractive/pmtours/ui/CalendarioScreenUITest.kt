@@ -7,10 +7,10 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.pminteractive.pmtours.support.ContenidoTestEspanol
 import com.pminteractive.pmtours.support.RepositorioServiciosFake
 import com.pminteractive.pmtours.support.driverPrueba
 import com.pminteractive.pmtours.ui.screens.driverGuia.CalendarioScreen
-import com.pminteractive.pmtours.ui.theme.PMTOURSTheme
 import com.pminteractive.pmtours.viewmodel.ServicioViewModel
 import org.junit.Rule
 import org.junit.Test
@@ -29,7 +29,7 @@ class CalendarioScreenUITest {
         )
 
         rule.setContent {
-            PMTOURSTheme {
+            ContenidoTestEspanol {
                 CalendarioScreen(
                     usuario = usuario,
                     servicioViewModel = viewModel
