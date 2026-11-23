@@ -170,20 +170,20 @@ Proyecto de carácter estrictamente académico. No se utilizan credenciales prod
 
 ## APK release firmada
 
-- **Archivo:** `PMTours-1.0.1.apk`
+- **Archivo:** `PMTours-1.0.3.apk`
 - **Paquete:** `com.pminteractive.pmtours`
-- **Version:** `1.0.1` (`versionCode` 2)
+- **Version:** `1.0.3` (`versionCode` 3)
 - **Android minimo:** 8.0 (API 26)
 - **Firma:** APK Signature Scheme v2 + v3
-- **SHA-256:** `e5a5cef33caea05257674bdafa283314890af4243e1774b6e9756780fa1280e5`
+- **SHA-256:** `b9effa26f27186c34ef43631ff801b8986330a5da36321adbe568c8d713f298b`
 
 ### Instalacion en el telefono
 
-1. Descarga `PMTours-1.0.1.apk` desde la release de GitHub o desde el enlace entregado en AVA.
+1. Descarga `PMTours-1.0.3.apk` desde la release de GitHub o desde el enlace entregado en AVA.
 2. En el telefono, abre **Ajustes > Seguridad > Instalar apps desconocidas** y permite la instalacion para la app desde la que descargaste el APK (Chrome, Archivos, etc.).
 3. Abre el APK y presiona **Instalar**.
 4. Abre **PM TOURS** desde el lanzador.
-5. Verifica la version en **Ajustes > Apps > PM TOURS > Informacion de la app** (debe decir `1.0.1`).
+5. Verifica la version en **Ajustes > Apps > PM TOURS > Informacion de la app** (debe decir `1.0.3`).
 
 ### Como se genero
 
