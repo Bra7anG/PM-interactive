@@ -165,3 +165,48 @@ Las interfaces diseñadas se ubican en la carpeta `docs/diseno/interfaces/`:
 ## Privacidad de la Información
 
 Proyecto de carácter estrictamente académico. No se utilizan credenciales productivas, bases de datos internas ni datos personales o sensibles de trabajadores y clientes de Southbound. Todos los registros son ficticios y anonimizados.
+
+---
+
+## APK release firmada
+
+- **Archivo:** `PMTours-1.0.3.apk`
+- **Paquete:** `com.pminteractive.pmtours`
+- **Version:** `1.0.3` (`versionCode` 3)
+- **Android minimo:** 8.0 (API 26)
+- **Firma:** APK Signature Scheme v2 + v3
+- **SHA-256:** `2f62d917b224176680ae186254b028bf0d405b3a896fb25aa1f3881424c54a9e`
+
+### Instalacion en el telefono
+
+1. Descarga `PMTours-1.0.3.apk` desde la release de GitHub o desde el enlace entregado en AVA.
+2. En el telefono, abre **Ajustes > Seguridad > Instalar apps desconocidas** y permite la instalacion para la app desde la que descargaste el APK (Chrome, Archivos, etc.).
+3. Abre el APK y presiona **Instalar**.
+4. Abre **PM TOURS** desde el lanzador.
+5. Verifica la version en **Ajustes > Apps > PM TOURS > Informacion de la app** (debe decir `1.0.3`).
+
+### Como se genero
+
+```bash
+# 1. Crear el keystore (solo la primera vez)
+keytool -genkeypair -v \
+  -keystore pmtours.jks \
+  -alias pmtours \
+  -keyalg RSA -keysize 2048 -validity 10000 \
+  -storetype PKCS12
+
+# 2. Compilar la APK release
+./gradlew :app:assembleRelease
+
+# 3. Verificar la firma
+apksigner verify --verbose --print-certs \
+  app/build/outputs/apk/release/app-release.apk
+
+# 4. Verificar version
+aapt2 dump badging \
+  app/build/outputs/apk/release/app-release.apk | grep package
+```
+
+### Firma segura (sin secretos en el repositorio)
+
+`app/build.gradle.kts` lee la API key y las credenciales de firma desde `local.properties` (ignorado por Git) o de variables de entorno. El `.jks` y las contrasenas nunca se suben al repositorio. En CI se usan variables de entorno / secrets.
