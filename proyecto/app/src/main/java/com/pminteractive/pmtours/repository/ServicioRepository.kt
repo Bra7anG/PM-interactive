@@ -4,6 +4,9 @@ import com.pminteractive.pmtours.model.servicio.EstadoServicio
 import com.pminteractive.pmtours.model.servicio.RegistroHitoGps
 import com.pminteractive.pmtours.model.servicio.Servicio
 import com.pminteractive.pmtours.model.servicio.TipoServicio
+import com.pminteractive.pmtours.network.BackendApiService
+import com.pminteractive.pmtours.network.BackendHitoRequest
+import com.pminteractive.pmtours.network.BackendRespuestaRequest
 import com.pminteractive.pmtours.network.LinceApiService
 import com.pminteractive.pmtours.network.toDomain
 import kotlinx.coroutines.flow.Flow
@@ -26,7 +29,8 @@ interface ServicioRepository {
 
 class HybridServicioRepository(
     private val apiService: LinceApiService,
-    private val coordinadorRepository: CoordinadorRepository
+    private val coordinadorRepository: CoordinadorRepository,
+    private val backendApi: BackendApiService? = null
 ) : ServicioRepository {
 
     private val _serviciosRemotos = MutableStateFlow<List<Servicio>>(emptyList())
@@ -67,6 +71,11 @@ class HybridServicioRepository(
     }
 
     override suspend fun responderAsignacion(servicioId: String, aceptar: Boolean): Result<Unit> {
+        backendApi?.let { api ->
+            runCatching {
+                api.responderAsignacion(servicioId, BackendRespuestaRequest(aceptar))
+            }
+        }
         val nuevoEstado = if (aceptar) EstadoServicio.CONFIRMADO else EstadoServicio.RECHAZADO
         coordinadorRepository.registrarCambioServicio(
             servicioId = servicioId,
@@ -76,6 +85,11 @@ class HybridServicioRepository(
     }
 
     override suspend fun registrarCheckIn(servicioId: String, hito: RegistroHitoGps): Result<Unit> {
+        backendApi?.let { api ->
+            runCatching {
+                api.registrarCheckIn(servicioId, hito.toBackendRequest())
+            }
+        }
         coordinadorRepository.registrarCambioServicio(
             servicioId = servicioId,
             nuevoEstado = EstadoServicio.EN_RUTA,
@@ -85,6 +99,11 @@ class HybridServicioRepository(
     }
 
     override suspend fun registrarCheckOut(servicioId: String, hito: RegistroHitoGps): Result<Unit> {
+        backendApi?.let { api ->
+            runCatching {
+                api.registrarCheckOut(servicioId, hito.toBackendRequest())
+            }
+        }
         coordinadorRepository.registrarCambioServicio(
             servicioId = servicioId,
             nuevoEstado = EstadoServicio.FINALIZADO,
@@ -249,3 +268,9 @@ class HybridServicioRepository(
         }
     }
 }
+
+private fun RegistroHitoGps.toBackendRequest(): BackendHitoRequest = BackendHitoRequest(
+    latitud = latitud,
+    longitud = longitud,
+    direccionReferencia = direccionReferencia
+)

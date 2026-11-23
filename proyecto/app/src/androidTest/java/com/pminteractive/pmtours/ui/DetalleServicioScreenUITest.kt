@@ -10,10 +10,10 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.pminteractive.pmtours.model.servicio.EstadoServicio
 import com.pminteractive.pmtours.model.servicio.Servicio
+import com.pminteractive.pmtours.support.ContenidoTestEspanol
 import com.pminteractive.pmtours.support.RepositorioServiciosFake
 import com.pminteractive.pmtours.support.servicioPrueba
 import com.pminteractive.pmtours.ui.screens.driverGuia.DetalleServicioScreen
-import com.pminteractive.pmtours.ui.theme.PMTOURSTheme
 import com.pminteractive.pmtours.viewmodel.ServicioViewModel
 import org.junit.Rule
 import org.junit.Test
@@ -32,7 +32,7 @@ class DetalleServicioScreenUITest {
         )
 
         rule.setContent {
-            PMTOURSTheme {
+            ContenidoTestEspanol {
                 DetalleServicioScreen(
                     servicioId = servicioId,
                     usuarioId = servicio.driverId ?: servicio.guiaId ?: "TRA-001",

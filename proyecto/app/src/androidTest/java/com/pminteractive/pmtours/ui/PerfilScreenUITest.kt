@@ -12,12 +12,12 @@ import androidx.compose.ui.test.performScrollTo
 import com.pminteractive.pmtours.model.operadores.Usuario
 import com.pminteractive.pmtours.model.servicio.EstadoServicio
 import com.pminteractive.pmtours.model.servicio.Servicio
+import com.pminteractive.pmtours.support.ContenidoTestEspanol
 import com.pminteractive.pmtours.support.RepositorioServiciosFake
 import com.pminteractive.pmtours.support.driverPrueba
 import com.pminteractive.pmtours.support.guiaPrueba
 import com.pminteractive.pmtours.support.servicioPrueba
 import com.pminteractive.pmtours.ui.screens.driverGuia.PerfilScreen
-import com.pminteractive.pmtours.ui.theme.PMTOURSTheme
 import com.pminteractive.pmtours.viewmodel.ServicioViewModel
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -41,7 +41,7 @@ class PerfilScreenUITest {
         val viewModel = ServicioViewModel(repositorio, usuario.id)
 
         rule.setContent {
-            PMTOURSTheme {
+            ContenidoTestEspanol {
                 PerfilScreen(
                     usuario = usuario,
                     onCerrarSesion = onCerrarSesion,
